@@ -1,0 +1,42 @@
+/* Billing Method：外壳、卡片全部复用工作台（E-Attendance）那套 class，
+   这里只把卡片区从四列改成两列，并让图标大一点。 */
+.billing-content .employer-grid {
+  grid-template-columns: repeat(2, minmax(0, calc(340 * var(--e))));
+  justify-content: center;
+  gap: calc(26 * var(--e));
+}
+
+.billing-page .employer-module { min-height: calc(370 * var(--e)); }
+.billing-page .employer-module-icon {
+  width: calc(126 * var(--e));
+  height: calc(126 * var(--e));
+  margin: calc(34 * var(--e)) auto auto;
+}
+
+.billing-toast {
+  position: fixed;
+  z-index: 10;
+  left: 50%;
+  bottom: max(calc(56 * var(--e)), calc(24px + env(safe-area-inset-bottom)));
+  padding: calc(17 * var(--e)) calc(28 * var(--e));
+  border: 1px solid #fff;
+  border-radius: calc(20 * var(--e));
+  background: #f9fcff;
+  box-shadow: 0 8px 40px #254e7c2b;
+  color: #142b50;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 900px) {
+  .billing-content .employer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .billing-page .employer-module { min-height: 260px; }
+  .billing-page .employer-module-icon { width: 86px; height: 86px; }
+}
+
+@media (max-width: 700px) {
+  .billing-content .employer-grid { grid-template-columns: 1fr; }
+  .billing-toast { padding: 14px 18px; font-size: 15px; }
+}

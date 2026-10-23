@@ -1,0 +1,320 @@
+.employer-page {
+  --e: calc(100vw / 1376);
+  /* 布局沿用 --e（1376 基准），字号改用与考勤页相同的 --a（1568 基准）刻度，
+     避免同一套 iPad 原型里正文和标题跨页跳变。 */
+  --a: calc(100vw / 1568);
+  --fs-title: max(calc(36 * var(--a)), 26px);
+  --fs-body: max(calc(22 * var(--a)), 17px);
+  --fs-secondary: max(calc(20 * var(--a)), 15px);
+  --fs-label: max(calc(18 * var(--a)), 14px);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: max(env(safe-area-inset-top), calc(38 * var(--e))) max(env(safe-area-inset-right), calc(46 * var(--e))) max(env(safe-area-inset-bottom), calc(40 * var(--e))) max(env(safe-area-inset-left), calc(46 * var(--e)));
+  overflow: hidden;
+  color: #142b50;
+}
+.employer-landscape { position: absolute; z-index: -1; inset: 0; background: url('/assets/bay-cover-employer.webp') center / cover no-repeat; }
+.employer-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: calc(66 * var(--e)); }
+.employer-back { display: grid; place-items: center; width: calc(66 * var(--e)); height: calc(66 * var(--e)); min-width: 44px; min-height: 44px; padding: 0; border: 1px solid #ffffffc7; border-radius: 50%; background: #ffffffdc; color: #18375e; box-shadow: 0 7px 20px #6283aa20; }
+.employer-back svg { width: calc(29 * var(--e)); height: calc(29 * var(--e)); }
+.employer-header > div { text-align: center; }
+.employer-header p, .employer-header h1 { margin: 0; }
+.employer-header p { color: #6e7e97; font-size: var(--fs-label); line-height: 1.3; }
+.employer-header h1 { font-size: var(--fs-title); line-height: 1.15; letter-spacing: calc(-.5 * var(--e)); }
+.employer-size-control { position: relative; justify-self: end; }
+.employer-size-button { display: grid; place-items: center; width: calc(66 * var(--e)); height: calc(66 * var(--e)); min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: radial-gradient(125% 125% at 50% 26%, #ffffff 0%, #f3fbff 45%, #d9edff 100%); color: #1689eb; }
+.employer-size-button svg { width: calc(38 * var(--e)); height: calc(38 * var(--e)); }
+.employer-size-options { position: absolute; z-index: 3; top: calc(100% + 10px); right: 0; width: calc(210 * var(--e)); padding: calc(16 * var(--e)); border-radius: calc(18 * var(--e)); background: #f8fcff; color: #18375e; }
+.employer-size-options p { margin: 0 0 calc(11 * var(--e)); font-size: var(--fs-label); font-weight: 700; }
+.employer-size-options > div { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(5 * var(--e)); }
+.employer-size-options button { min-height: 38px; padding: 6px; border-radius: 9px; background: #eaf5ff; color: #487092; font-size: max(calc(14 * var(--e)), 13px); }
+.employer-size-options button[aria-pressed="true"] { background: #1689eb; color: #fff; }
+.employer-content { position: relative; top: calc(-20 * var(--e)); display: flex; flex: 1; flex-direction: column; justify-content: center; max-width: calc(1190 * var(--e)); width: 100%; margin: 0 auto; }
+.employer-heading { margin-bottom: calc(32 * var(--e)); text-align: center; }
+.employer-heading p, .employer-heading h2 { margin: 0; }
+.employer-heading p { margin-bottom: calc(8 * var(--e)); color: #1593f0; font-size: var(--fs-label); font-weight: 700; letter-spacing: calc(1.5 * var(--e)); text-transform: uppercase; }
+.employer-heading h2 { font-size: max(calc(34 * var(--e)), 26px); line-height: 1.15; letter-spacing: calc(-.6 * var(--e)); }
+.employer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(20 * var(--e)); }
+.employer-module { position: relative; display: flex; flex-direction: column; align-items: flex-start; min-height: calc(330 * var(--e)); padding: calc(26 * var(--e)) calc(26 * var(--e)) calc(60 * var(--e)); overflow: hidden; border: 1px solid #ffffffbf; border-radius: calc(25 * var(--e)); background: linear-gradient(145deg, #f9fcffd9, #e8f4ffcf); color: #18375e; text-align: left; box-shadow: inset 0 2px 3px #ffffffa8, 0 12px 30px #3d77ae18; transition: transform .18s, background .18s, box-shadow .18s; }
+.employer-module:hover { background: #fafdffed; box-shadow: inset 0 2px 3px #ffffffb8, 0 16px 34px #3d77ae25; transform: translateY(calc(-4 * var(--e))); }
+.employer-module-primary { border-color: #88ccff; background: linear-gradient(145deg, #f7fcffea, #d9efffe3); box-shadow: inset 0 2px 3px #ffffffc9, 0 12px 30px #168be225; }
+/* 卡片图标换成 3D 插图（透明底 PNG），去掉原来的白色圆角底板，让插图直接浮在玻璃卡片上。
+   插图本身自带高光和阴影，再叠一层 drop-shadow 会发灰，这里不加任何投影 */
+.employer-module-icon { display: grid; place-items: center; width: calc(96 * var(--e)); height: calc(96 * var(--e)); margin: calc(30 * var(--e)) auto auto; }
+.employer-module-icon img { width: 100%; height: 100%; object-fit: contain; }
+.employer-module-copy { display: grid; gap: calc(10 * var(--e)); width: 100%; margin-top: calc(16 * var(--e)); text-align: center; }
+.employer-module-copy strong { font-size: var(--fs-body); line-height: 1.18; }
+/* 描述统一占两行高度：否则 1 行 / 2 行的卡片会把标题顶到不同基线，四张卡片的文字就对不齐了 */
+.employer-module-copy small { min-height: calc(2 * 1.45em); color: #70819a; font-size: var(--fs-secondary); line-height: 1.45; }
+.employer-module-arrow { position: absolute; right: calc(25 * var(--e)); bottom: calc(27 * var(--e)); color: #1293ee; font-size: max(calc(25 * var(--e)), 20px); }
+.employer-notice { position: fixed; z-index: 2; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100% - 40px); padding: 14px 12px 14px 18px; border: 1px solid #fff; border-radius: 17px; background: #f9fcff; box-shadow: 0 10px 35px #1d4c7e29; color: #4b6687; font-size: 15px; transform: translateX(-50%); }
+.employer-notice button { display: grid; place-items: center; width: 36px; height: 36px; padding: 8px; border: 0; border-radius: 50%; background: #e4f1ff; color: #547596; }
+.employer-notice svg { width: 20px; height: 20px; }
+/* 字号加上下限后，四列在 1000px 以下会把卡片压到 170–210px，
+ * 正文放不下、还会撞到右下角箭头，因此提前切两列。 */
+@media (max-width: 1000px) { .employer-page { --e: calc(100vw / 900); } .employer-grid { grid-template-columns: repeat(2, 1fr); } .employer-content { justify-content: flex-start; padding-top: 70px; } .employer-module { min-height: 230px; } }
+@media (max-width: 600px) { .employer-page { --e: 1px; padding: 24px 18px 34px; overflow: auto; } .employer-header h1 { font-size: 25px; } .employer-size-button { width: 48px; height: 48px; } .employer-content { padding-top: 55px; } .employer-heading { margin-bottom: 24px; } .employer-heading h2 { font-size: 27px; } .employer-grid { grid-template-columns: 1fr; gap: 13px; } .employer-module { min-height: 170px; padding: 20px 20px 52px; } .employer-module-icon { width: 60px; height: 60px; margin: 8px auto auto; } .employer-module-copy { gap: 5px; } .employer-module-copy strong { font-size: 21px; } .employer-module-copy small { font-size: 14px; } .employer-module-arrow { right: 21px; bottom: 21px; font-size: 23px; } }
+
+/* 基线：雇主页体系的按钮统一去掉渐变、投影和描边（复制到 Figma 更稳）。
+   用 :where() 把特异性压到最低，别压掉各自带玻璃质感的圆形按钮
+   （扫码 / 消息 / 设置、返回按钮）；原来写成 `.employer-page button`
+   特异性会高于 `.dept-scan > button`，把三个图标的圆形底整个抹掉。 */
+.employer-page :where(button) { border: 0; box-shadow: none; background-image: none; filter: none; }
+/* 返回按钮自己带描边 + 淡投影，在这条基线之后补回来 */
+.employer-back { border: 1px solid #ffffffc7; background: #ffffffdc; box-shadow: 0 7px 20px #6283aa20; }
+.employer-size-button { background: #eaf6ff; }
+.employer-module, .employer-module-primary { background: #f5faff; box-shadow: none; }
+.employer-module:hover { background: #edf7ff; box-shadow: none; transform: none; }
+
+@media (min-width: 1001px) {
+  .employer-header h1 { font-size: var(--fs-title); line-height: 1.2; letter-spacing: -.6px; font-weight: 700; }
+}
+
+/* ---- Labour Requisition：先选部门 ----
+   顶栏沿用签名板那一套（左下 X、中间标题、右上勾），卡片继续用玻璃渐变 */
+.employer-dept-dialog { width: min(620px, calc(100vw - 40px)); margin: auto; padding: 0; overflow: visible; border: 1px solid #ffffffc4; border-radius: calc(26 * var(--e)); background: linear-gradient(160deg, #f8fcff, #e7f2fe); color: #142b50; box-shadow: 0 30px 100px #16365a3d; }
+.employer-dept-dialog::backdrop { background: #1939594d; backdrop-filter: blur(6px); }
+.employer-dept-dialog:focus { outline: none; }
+.employer-dept-head { overflow: hidden; border-radius: calc(26 * var(--e)) calc(26 * var(--e)) 0 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: calc(16 * var(--e)); padding: calc(18 * var(--e)) calc(22 * var(--e)); border-bottom: 1px solid #ffffffb8; background: linear-gradient(180deg, #d9ebfdd9, #eaf4ff8f); }
+.employer-dept-head strong { font-size: max(calc(28 * var(--e)), 22px); font-weight: 700; letter-spacing: calc(-.4 * var(--e)); text-align: center; }
+.employer-dept-close, .employer-dept-confirm { display: grid; place-items: center; width: max(calc(52 * var(--e)), 44px); height: max(calc(52 * var(--e)), 44px); padding: 0; border-radius: 50%; }
+.employer-dept-close { background: #e2eefb; color: #5f7592; }
+.employer-dept-close:hover { background: #d7e7fa; }
+.employer-dept-close svg { width: 40px; height: 40px; }
+.employer-dept-confirm { background: #078aff; color: #fff; }
+.employer-dept-confirm svg { width: 30px; height: 30px; }
+.employer-dept-confirm:not(:disabled):hover { background: #007be6; }
+.employer-dept-confirm:disabled { background: #d3e2f3; cursor: default; }
+.employer-dept-confirm:disabled svg path { stroke: #9cb1c8; }
+.employer-dept-body { display: grid; gap: calc(26 * var(--e)); padding: calc(30 * var(--e)) calc(30 * var(--e)) calc(34 * var(--e)); }
+.employer-dept-body p { margin: 0; color: #43608a; font-size: max(calc(23 * var(--e)), 18px); line-height: 1.5; font-weight: 500; text-align: center; text-wrap: balance; }
+.employer-dept-select .app-select-trigger {
+  height: max(calc(72 * var(--e)), 56px);
+  padding: 0 max(calc(52 * var(--e)), 44px) 0 max(calc(22 * var(--e)), 18px);
+  border: 1px solid #ffffff;
+  border-radius: calc(16 * var(--e));
+  background: #fff;
+  color: #142b50;
+  justify-content: center;
+  font-size: max(calc(21 * var(--e)), 17px);
+  font-weight: 500;
+  box-shadow: 0 3px 14px #4a7cab14;
+}
+.employer-dept-select .app-select-trigger:hover { border-color: #cfe6ff; }
+.employer-dept-select .app-select-trigger.is-open { border-color: #8ecbff; }
+.employer-dept-select .app-select-trigger.is-empty { color: #9aabc0; }
+.employer-dept-select .app-select-caret {
+  position: absolute;
+  top: 50%;
+  right: max(calc(22 * var(--e)), 18px);
+  margin: 0;
+  transform: translateY(-50%);
+}
+.employer-dept-select .app-select-menu button { text-align: center; }
+.employer-dept-select .app-select-menu button:focus { border-color: #8ecbff; }
+.employer-dept-caret { position: absolute; top: 50%; right: max(calc(22 * var(--e)), 18px); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 8px solid #b9c9db; transform: translateY(-50%); pointer-events: none; }
+@media (max-width: 600px) {
+  .employer-dept-head { padding: 12px 14px; }
+  .employer-dept-body { gap: 18px; padding: 22px 18px 24px; }
+  .employer-dept-body p { font-size: 17px; }
+}
+
+/* ---- 部门主页：登录后先落到部门，再由部门进入 Employer 工作台 ----
+   结构参考稿：左上企业 LOGO + 部门名，右上扫码 / 消息（角标）/ 设置，下方一个模块入口。
+   视觉沿用 Employer 页：同样的背景、圆形玻璃按钮、模块卡片与字号令牌 */
+.dept-header { display: flex; align-items: center; justify-content: space-between; gap: calc(24 * var(--e)); min-height: calc(66 * var(--e)); }
+.dept-brand { display: flex; align-items: center; gap: calc(18 * var(--e)); min-width: 0; padding: 0; border: 0; border-radius: calc(20 * var(--e)); background: none; font-family: inherit; text-align: left; cursor: pointer; }
+.dept-brand:hover .dept-logo { background: #f4faff; }
+.dept-brand:active .dept-logo { background: #eaf6ff; }
+.dept-logo { display: grid; place-items: center; flex: 0 0 auto; width: calc(66 * var(--e)); height: calc(66 * var(--e)); border: 1px solid #ffffffc7; border-radius: calc(20 * var(--e)); background: #fff; box-shadow: 0 7px 20px #6283aa20; }
+.dept-logo img { width: calc(44 * var(--e)); height: calc(44 * var(--e)); object-fit: contain; }
+.dept-brand-name { margin: 0; color: #142b50; font-size: var(--fs-title); line-height: 1.15; letter-spacing: calc(-.5 * var(--e)); font-weight: 700; white-space: nowrap; }
+.dept-actions { display: flex; align-items: center; gap: calc(14 * var(--e)); flex: 0 0 auto; }
+.dept-scan,
+.dept-settings,
+.dept-mail { position: relative; }
+.dept-scan > button,
+.dept-settings > button,
+.dept-mail > button,
+.dept-actions > button { position: relative; display: grid; place-items: center; width: calc(66 * var(--e)); height: calc(66 * var(--e)); min-width: 44px; min-height: 44px; padding: 0; border: 1px solid #ffffffd4; border-radius: 50%; background: radial-gradient(125% 125% at 50% 26%, #ffffff 0%, #f3fbff 45%, #d9edff 100%); color: #1689eb; box-shadow: 0 8px 22px #4d9dd824, 0 0 0 7px #ffffff26; }
+.dept-scan > button:hover,
+.dept-settings > button:hover,
+.dept-mail > button:hover,
+.dept-actions > button:hover { background: radial-gradient(125% 125% at 50% 28%, #ffffff 0%, #f2faff 52%, #dcefff 100%); }
+.dept-scan > button:active,
+.dept-settings > button:active,
+.dept-mail > button:active,
+.dept-actions > button:active { background: radial-gradient(125% 125% at 50% 28%, #f8fdff 0%, #eef9ff 52%, #d5ecff 100%); }
+.dept-actions svg { width: calc(38 * var(--e)); height: calc(38 * var(--e)); }
+/* 扫码 / 设置两个下拉共用一块玻璃面板：沿用注册页区号选择器的质感，行与行之间一条细分割线 */
+.dept-menu { position: absolute; z-index: 6; top: calc(100% + calc(12 * var(--e))); right: 0; width: calc(196 * var(--e)); overflow: hidden; border: 1px solid #ffffffd9; border-radius: calc(18 * var(--e)); background: #f6fafffa; box-shadow: 0 calc(18 * var(--e)) calc(44 * var(--e)) #234a7938; backdrop-filter: blur(18px); }
+.dept-menu-wide { width: calc(232 * var(--e)); }
+.dept-menu button { display: block; width: 100%; min-height: calc(58 * var(--e)); padding: 0 calc(16 * var(--e)); color: #1f3b5c; font-size: var(--fs-body); font-weight: 500; text-align: center; white-space: nowrap; transition: background .15s; }
+.dept-menu button:hover { background: #e8f4ff; }
+.dept-menu button + button { border-top: 1px solid #e2edfa; }
+.dept-badge { position: absolute; top: calc(-4 * var(--e)); right: calc(-4 * var(--e)); display: grid; place-items: center; min-width: calc(26 * var(--e)); height: calc(26 * var(--e)); padding: 0 5px; border: 2px solid #fff; border-radius: 999px; background: #f04438; color: #fff; font-size: max(calc(13 * var(--e)), 11px); font-weight: 700; line-height: 1; }
+/* 三个入口整体在内容区里上下居中：
+   父级 .employer-page 是 flex column，用 flex + justify-content 居中（Figma 会还原成 auto-layout 居中），
+   不要用 margin: auto —— 它在 auto-layout 里会被丢掉 */
+.dept-content { display: flex; flex: 1; flex-direction: column; justify-content: center; align-items: center; align-self: center; width: 100%; max-width: calc(1190 * var(--e)); }
+/* 入口数量会变（部分模块可能临时隐藏），所以不写死三列：
+   卡片定宽 330e，列数由子项数量自动决定，再由父级 align-items: center 整体居中 */
+.dept-content .employer-grid { width: max-content; max-width: 100%; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc(330 * var(--e)); gap: calc(44 * var(--e)); }
+.dept-module { min-height: calc(330 * var(--e)); }
+
+@media (max-width: 600px) {
+  /* 窄屏下品牌名与右侧三枚按钮放不进一行时换行，避免按钮被裁在屏幕外 */
+  .dept-header { flex-wrap: wrap; gap: 8px; row-gap: 10px; }
+  .dept-actions { margin-left: auto; }
+  .dept-brand { gap: 8px; }
+  .dept-logo { width: 42px; height: 42px; border-radius: 13px; }
+  .dept-logo img { width: 28px; height: 28px; }
+  .dept-brand-name { min-width: 0; overflow: hidden; font-size: 19px; letter-spacing: -.3px; text-overflow: ellipsis; }
+  .dept-actions { gap: 6px; }
+  .dept-scan > button,
+  .dept-settings > button,
+  .dept-actions > button { width: 40px; height: 40px; }
+  .dept-actions svg { width: 22px; height: 22px; }
+  .dept-content .employer-grid { grid-auto-flow: row; grid-auto-columns: auto; width: 100%; grid-template-columns: minmax(0, 1fr); }
+  .dept-module { min-height: 230px; }
+}
+
+/* ---- Notification：点头部信封图标进入的通知列表 ----
+   顶栏沿用部门主页的圆形返回按钮与标题令牌，列表用同一套玻璃面板，行间以细线分隔 */
+.notice-page { overflow: hidden; }
+.notice-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: calc(66 * var(--e)); margin-bottom: calc(20 * var(--e)); }
+.notice-header h1 { margin: 0; color: #142b50; font-size: var(--fs-title); line-height: 1.15; letter-spacing: calc(-.5 * var(--e)); font-weight: 700; white-space: nowrap; text-align: center; }
+.notice-back { display: grid; place-items: center; justify-self: start; width: calc(66 * var(--e)); height: calc(66 * var(--e)); min-width: 44px; min-height: 44px; padding: 0; border: 1px solid #ffffffc7; border-radius: 50%; background: #ffffffdc; color: #18375e; box-shadow: 0 7px 20px #6283aa20; }
+.notice-back svg { width: calc(30 * var(--e)); height: calc(30 * var(--e)); }
+.notice-back:hover { background: #f4faff; }
+.notice-readall { justify-self: end; padding: 0; background: transparent; color: #0f8bea; font-size: var(--fs-body); font-weight: 600; white-space: nowrap; }
+.notice-readall:hover:not(:disabled) { color: #0071cf; }
+.notice-readall:disabled { color: #9badc2; cursor: default; }
+.notice-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 0 calc(28 * var(--e)) calc(12 * var(--e)); overflow: auto; border: 1px solid #ffffffb8; border-radius: calc(27 * var(--e)); background: linear-gradient(115deg, #f3f9ffd6, #edf5ffe0 60%, #eaf3ffe0); box-shadow: inset 0 1px 3px #ffffff86, 0 calc(13 * var(--e)) calc(40 * var(--e)) #628dc613; }
+.notice-row { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: calc(20 * var(--e)); align-items: center; padding: calc(25 * var(--e)) calc(6 * var(--e)); border-bottom: 1px solid #e4eefa; }
+.notice-row:last-child { border-bottom: 0; }
+.notice-avatar { display: grid; place-items: center; width: calc(66 * var(--e)); height: calc(66 * var(--e)); border: 1px solid #ffffff; border-radius: calc(19 * var(--e)); background: #fdfeff; box-shadow: 0 calc(4 * var(--e)) calc(14 * var(--e)) #5f93c014; }
+.notice-avatar svg { width: calc(38 * var(--e)); height: calc(38 * var(--e)); }
+.notice-copy { min-width: 0; }
+.notice-head { display: flex; align-items: baseline; justify-content: space-between; gap: calc(16 * var(--e)); }
+.notice-head strong { color: #1d3556; font-size: var(--fs-body); font-weight: 600; }
+.notice-head strong.is-unread::after { content: ""; display: inline-block; width: calc(8 * var(--e)); height: calc(8 * var(--e)); margin-left: calc(9 * var(--e)); border-radius: 50%; background: #f04438; vertical-align: 1px; }
+.notice-head time { flex: 0 0 auto; color: #7d8ba1; font-size: var(--fs-secondary); white-space: nowrap; }
+.notice-copy p { margin: calc(7 * var(--e)) 0 0; color: #67788f; font-size: var(--fs-secondary); line-height: 1.38; }
+
+@media (max-width: 1000px) {
+  .notice-row { column-gap: 14px; padding: 16px 4px; }
+  .notice-head { flex-wrap: wrap; row-gap: 4px; }
+}
+@media (max-width: 600px) {
+  .notice-header { margin-bottom: 14px; }
+  .notice-header h1 { font-size: 20px; }
+  .notice-back { width: 40px; height: 40px; }
+  .notice-back svg { width: 22px; height: 22px; }
+  .notice-readall { font-size: 15px; }
+  .notice-panel { padding: 0 14px 8px; border-radius: 18px; }
+  .notice-avatar { width: 44px; height: 44px; border-radius: 13px; }
+  .notice-avatar svg { width: 26px; height: 26px; }
+  .notice-head strong { font-size: 16px; }
+  .notice-head time,
+  .notice-copy p { font-size: 13px; }
+}
+
+/* ---- Scan：取景框居中，四角描边 + 一道缓慢上下往复的扫描线 ---- */
+.scan-page { overflow: hidden; }
+.scan-stage { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: calc(30 * var(--e)); min-height: 0; }
+.scan-frame { position: relative; display: grid; place-items: center; width: calc(420 * var(--e)); height: calc(420 * var(--e)); border-radius: calc(32 * var(--e)); background: radial-gradient(120% 120% at 50% 8%, #ffffffd9, #e6f3ffe0 62%, #d7ebfce0); box-shadow: inset 0 2px 4px #ffffffb8, 0 calc(18 * var(--e)) calc(50 * var(--e)) #4b7fb01f; }
+.scan-glyph { width: calc(190 * var(--e)); height: calc(190 * var(--e)); opacity: .55; }
+.scan-corner { position: absolute; width: calc(64 * var(--e)); height: calc(64 * var(--e)); border: calc(6 * var(--e)) solid #1690f5; }
+.scan-corner-tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: calc(26 * var(--e)) 0 0 0; }
+.scan-corner-tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 calc(26 * var(--e)) 0 0; }
+.scan-corner-bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 calc(26 * var(--e)); }
+.scan-corner-br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 calc(26 * var(--e)) 0; }
+.scan-line { position: absolute; left: calc(24 * var(--e)); right: calc(24 * var(--e)); height: calc(3 * var(--e)); border-radius: 999px; background: linear-gradient(90deg, #1690f500, #1690f5cc 18%, #1690f5 50%, #1690f5cc 82%, #1690f500); box-shadow: 0 0 calc(16 * var(--e)) #1690f599; animation: scan-sweep 2.8s ease-in-out infinite; }
+@keyframes scan-sweep {
+  0%, 100% { top: calc(58 * var(--e)); opacity: .35; }
+  50% { top: calc(362 * var(--e)); opacity: 1; }
+}
+.scan-hint { margin: 0; color: #50698a; font-size: var(--fs-body); text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-line { animation: none; top: 50%; }
+}
+@media (max-width: 1000px) {
+  .scan-frame { width: 320px; height: 320px; }
+  .scan-glyph { width: 150px; height: 150px; }
+  .scan-corner { width: 50px; height: 50px; border-width: 5px; }
+  .scan-line { left: 18px; right: 18px; }
+  @keyframes scan-sweep {
+    0%, 100% { top: 44px; opacity: .35; }
+    50% { top: 274px; opacity: 1; }
+  }
+}
+@media (max-width: 600px) {
+  .scan-stage { gap: 22px; }
+  .scan-frame { width: 240px; height: 240px; border-radius: 22px; }
+  .scan-glyph { width: 110px; height: 110px; }
+  .scan-corner { width: 38px; height: 38px; border-width: 4px; }
+  .scan-hint { font-size: 15px; }
+}
+
+/* ---- Verify Promotion Code：提示语 + 六位码输入 + 提交 ---- */
+.verify-page { overflow: hidden; }
+/* 与其他页面保持一致：纯色面板、无渐变无投影；内容水平居中、贴顶排布 */
+.verify-panel { display: flex; flex: 1; flex-direction: column; justify-content: flex-start; min-height: 0; padding: calc(76 * var(--e)) calc(40 * var(--e)); overflow: auto; border: 1px solid #ffffffb8; border-radius: calc(27 * var(--e)); background: #f8fbff; }
+.verify-body { --code-box: calc(96 * var(--e)); --code-gap: calc(26 * var(--e)); display: grid; justify-items: start; gap: calc(46 * var(--e)); width: fit-content; max-width: 100%; margin-inline: auto; }
+.verify-hint { margin: 0; max-width: calc(760 * var(--e)); color: #2d4a6b; font-size: max(calc(26 * var(--e)), 19px); line-height: 1.45; font-weight: 500; }
+.verify-inputs { display: flex; gap: var(--code-gap); }
+.verify-inputs input { width: var(--code-box); height: calc(106 * var(--e)); padding: 0; border: 1px solid #dcebfa; border-radius: calc(19 * var(--e)); background: #fff; color: #0f6fc9; font-size: calc(38 * var(--e)); font-weight: 600; text-align: center; caret-color: #078aff; transition: border-color .15s, background .15s; }
+.verify-inputs input:hover { border-color: #bcdcf7; }
+.verify-inputs input:focus { border-color: #078aff; background: #fff; outline: none; }
+.verify-inputs input:focus-visible { outline: none; }
+.verify-inputs input.is-filled { border-color: #a9d3f8; }
+/* 提交与六格同宽、同起点：width 由输入格宽与间距推导，三者严格对齐 */
+.verify-actions { width: calc(6 * var(--code-box) + 5 * var(--code-gap)); }
+/* 选择器必须带 .employer-page：否则会被页头 `.employer-page button` 的
+   border:0 / background-image:none 清掉描边与底色 */
+.employer-page .verify-submit { width: 100%; height: calc(68 * var(--e)); padding: 0 calc(30 * var(--e)); border: 0; border-radius: calc(20 * var(--e)); background: #078aff; color: #fff; font-size: var(--fs-body); font-weight: 600; letter-spacing: calc(.2 * var(--e)); }
+.employer-page .verify-submit:hover:not(:disabled) { background: #007be6; }
+/* 禁用态沿用全站主按钮的规范（考勤签名确认、部门确认）：浅蓝底 + 灰蓝字 */
+.employer-page .verify-submit:disabled { background: #d3e2f3; color: #9cb1c8; cursor: default; }
+
+@media (max-width: 1000px) {
+  .verify-panel { padding: 46px 26px; }
+  .verify-body { --code-box: 60px; --code-gap: 14px; gap: 30px; }
+  .verify-inputs input { height: 68px; font-size: 25px; border-radius: 13px; }
+  .employer-page .verify-submit { height: 52px; font-size: 17px; }
+}
+@media (max-width: 600px) {
+  .verify-panel { padding: 30px 18px; }
+  .verify-body { --code-box: 45px; --code-gap: 8px; gap: 24px; }
+  .verify-hint { font-size: 16px; }
+  .verify-inputs input { height: 52px; font-size: 21px; border-radius: 10px; }
+  .employer-page .verify-submit { height: 46px; font-size: 16px; }
+}
+
+/*
+ * 首页的退出确认框复用了考勤页那套 dialog 结构。
+ * `.attendance-blue-button` 的底色写在 `.attendance-page .attendance-blue-button` 里，
+ * 在雇主页外壳（没有 .attendance-page 祖先）不生效，白字配透明底会看不见，这里补一份。
+ * 用纯色而不是考勤页那种渐变：雇主页的主按钮（.verify-submit / .cf-submit）都是纯色 #078aff。
+ */
+.dept-home .attendance-dialog .attendance-blue-button {
+  color: #fff;
+  border: 0;
+  background: #078aff;
+  box-shadow: none;
+}
+.dept-home .attendance-dialog .attendance-blue-button:hover:not(:disabled) { background: #007be6; }
+.dept-home .attendance-dialog .attendance-blue-button:active:not(:disabled) { background: #0068c8; }
+/* 次按钮：白底、无描边，靠在浅蓝弹窗底上的明度差立住 */
+.dept-home .attendance-dialog .attendance-soft-button {
+  border: 0;
+  background: #fff;
+  color: #3d5b7d;
+  box-shadow: none;
+}
+.dept-home .attendance-dialog .attendance-soft-button:hover { background: #f2f9ff; }

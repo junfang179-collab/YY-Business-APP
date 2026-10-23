@@ -1,0 +1,377 @@
+/* Staff Clothing —— 沿用 E-Attendance 系列的玻璃卡片外壳，只换工具栏和表格列 */
+.sc-page .attendance-panel.sc-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ---------- 工具栏：日期 + 搜索 ---------- */
+.sc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: calc(16 * var(--a));
+  margin: calc(18 * var(--a)) 0 calc(16 * var(--a));
+}
+
+.sc-date,
+.sc-search {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--a));
+  height: calc(76 * var(--a));
+  min-height: 52px;
+  border: 1px solid #ffffffde;
+  border-radius: calc(21 * var(--a));
+  background: #fbfdffeb;
+  box-shadow: inset 0 0 0 1px #ffffffa0, 0 calc(4 * var(--a)) calc(18 * var(--a)) #9bbedb0f;
+  color: #54708f;
+}
+
+.sc-date {
+  flex: 0 0 auto;
+  padding: 0 calc(24 * var(--a));
+  font-size: calc(var(--fs-body) + 1px);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .16s, color .16s, border-color .16s;
+}
+.sc-date:hover {
+  background: #eef7ff;
+  color: #1479cf;
+}
+.sc-date.is-set {
+  border-color: #a9d5ff;
+  background: #e9f5ff;
+  color: #078aff;
+}
+
+.sc-search {
+  flex: 1;
+  min-width: 0;
+  padding: 0 calc(22 * var(--a));
+  color: #7e93ab;
+}
+.sc-search input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--attendance-ink);
+  font-size: calc(var(--fs-body) + 1px);
+}
+.sc-search input::placeholder {
+  color: #93a6bd;
+  opacity: 1;
+}
+.sc-search:focus-within {
+  border-color: #a9d5ff;
+  box-shadow: 0 0 0 2px #80bdff59;
+}
+
+/* ---------- 表格 ---------- */
+.sc-head,
+.sc-row {
+  display: grid;
+  grid-template-columns: 1.15fr .65fr 1.55fr 1fr 1.65fr;
+  align-items: center;
+  padding: 0 calc(24 * var(--a));
+}
+
+.sc-head {
+  height: calc(90 * var(--a));
+  min-height: 56px;
+  border-bottom: 1px solid #dfeaf7;
+  background: #f4f9fff2;
+  color: #4a6480;
+  font-size: calc(var(--fs-secondary) + 2px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sc-head > span {
+  text-align: center;
+}
+
+.sc-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-row {
+  min-height: calc(112 * var(--a));
+  border-bottom: 1px solid #dfeaf7;
+  font-size: calc(var(--fs-body) + 1px);
+  color: #33506f;
+  transition: background .16s;
+}
+.sc-row:last-child {
+  border-bottom: 0;
+}
+.sc-row.is-clickable {
+  cursor: pointer;
+}
+.sc-row:hover {
+  background: #f2f9ff9c;
+}
+
+.sc-date-cell {
+  text-align: center;
+  white-space: nowrap;
+  font-size: calc(var(--fs-secondary) + 2px);
+  letter-spacing: -.1px;
+}
+
+.sc-time,
+.sc-employees,
+.sc-company {
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-company {
+  color: #4a6480;
+  font-size: calc(var(--fs-secondary) + 1px);
+  letter-spacing: .1px;
+}
+
+.sc-employees {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Job Title：蓝色可点，和 E-Attendance 系列的链接色一致 */
+.sc-job {
+  text-align: center;
+  min-width: 0;
+}
+.sc-job > button {
+  max-width: 100%;
+  padding: 0;
+  background: transparent;
+  color: #078aff;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.28;
+  text-align: center;
+  transition: color .16s;
+}
+.sc-job > button:hover {
+  color: #005fb8;
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .sc-head,
+  .sc-row {
+    grid-template-columns: 1fr .7fr 1.3fr .7fr 1.3fr;
+    padding: 0 14px;
+  }
+  .sc-head {
+    height: 62px;
+    font-size: 16px;
+  }
+  .sc-row {
+    min-height: 76px;
+    font-size: 17px;
+  }
+  .sc-company {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .sc-date,
+  .sc-search {
+    height: 54px;
+    border-radius: 16px;
+  }
+  .sc-panel {
+    overflow-x: auto;
+  }
+  .sc-head,
+  .sc-row {
+    min-width: 720px;
+  }
+}
+
+/* ---------- 明细页：Details / Statistics 两个页签 ---------- */
+.sc-tabs {
+  display: flex;
+  gap: calc(14 * var(--a));
+  margin: calc(18 * var(--a)) 0 calc(16 * var(--a));
+}
+
+.sc-tab {
+  flex: 0 1 calc(300 * var(--a));
+  height: calc(76 * var(--a));
+  min-height: 52px;
+  min-width: 150px;
+  padding: 0 calc(26 * var(--a));
+  border: 1px solid #ffffffde;
+  border-radius: calc(21 * var(--a));
+  background: #fbfdffeb;
+  color: #54708f;
+  font-size: calc(var(--fs-body) + 1px);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px #ffffffa0, 0 calc(4 * var(--a)) calc(18 * var(--a)) #9bbedb0f;
+  transition: background .16s, color .16s, border-color .16s;
+}
+.sc-tab:hover {
+  background: #eef7ff;
+  color: #1479cf;
+}
+.sc-tab.is-active {
+  border-color: #41bdff;
+  background: #078aff;
+  color: #fff;
+}
+
+/* 明细表：序号 / 姓名 / 证件号 / 性别 / 尺码 */
+.sc-size-head,
+.sc-size-row {
+  display: grid;
+  grid-template-columns: .5fr 1.15fr 1.5fr .9fr 1.2fr;
+  align-items: center;
+  padding: 0 calc(24 * var(--a));
+}
+
+.sc-size-head {
+  height: calc(90 * var(--a));
+  min-height: 56px;
+  border-bottom: 1px solid #dfeaf7;
+  background: #f4f9fff2;
+  color: #4a6480;
+  font-size: calc(var(--fs-secondary) + 2px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sc-size-head > span {
+  text-align: center;
+}
+
+.sc-size-row {
+  min-height: calc(104 * var(--a));
+  border-bottom: 1px solid #dfeaf7;
+  color: #33506f;
+  font-size: calc(var(--fs-body) + 1px);
+  text-align: center;
+  transition: background .16s;
+}
+.sc-size-row:last-child {
+  border-bottom: 0;
+}
+.sc-size-row:hover {
+  background: #f2f9ff9c;
+}
+
+.sc-index {
+  color: #8ba1ba;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-size-value {
+  color: #078aff;
+  font-weight: 600;
+}
+
+/* 统计表：尺码 × 性别
+   配色对齐 Details 表与列表页——表头浅蓝白、只有横线没有竖线、正文用面板本身的渐变底 */
+.sc-page .attendance-panel.sca-stat-panel {
+  position: relative;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.sca-stat-table {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  /* 与列表页 .attendance-table-scroll 同一底色，别让城市背景透上来 */
+  background: #fbfdffdd;
+  table-layout: fixed;
+}
+
+.sca-stat-table th,
+.sca-stat-table td {
+  padding: 0 calc(10 * var(--a));
+  border: 0;
+  border-bottom: 1px solid #dfeaf7;
+  text-align: center;
+  font-size: calc(var(--fs-body) + 1px);
+  font-weight: 400;
+  color: #33506f;
+}
+
+.sca-stat-table thead th {
+  height: calc(90 * var(--a));
+  min-height: 56px;
+  background: #f4f9fff2;
+  color: #4a6480;
+  font-size: calc(var(--fs-secondary) + 2px);
+  font-weight: 600;
+}
+
+.sca-stat-table tbody th {
+  background: transparent;
+  color: #4a6480;
+  font-weight: 600;
+}
+
+.sca-stat-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.sca-stat-table tbody tr:hover > * {
+  background: #f2f9ff9c;
+}
+
+.sca-stat-table td.is-total {
+  font-weight: 700;
+  color: #16324f;
+}
+
+@media (max-width: 700px) {
+  .sc-tabs {
+    margin: 12px 0;
+    gap: 10px;
+  }
+  .sc-tab {
+    flex: 1;
+    height: 54px;
+    border-radius: 16px;
+    font-size: 17px;
+  }
+  .sc-size-head,
+  .sc-size-row {
+    grid-template-columns: .5fr 1.1fr 1.4fr .8fr 1.1fr;
+    padding: 0 14px;
+  }
+  .sc-size-row {
+    min-height: 68px;
+    font-size: 17px;
+  }
+  .sc-page .attendance-panel.sca-stat-panel {
+    padding: 0;
+  }
+  .sca-stat-table th,
+  .sca-stat-table td {
+    font-size: 16px;
+  }
+}

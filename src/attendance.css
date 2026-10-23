@@ -1,0 +1,497 @@
+.attendance-page {
+  --a: calc(100vw / 1568);
+  /*
+   * 布局尺寸跟随视口等比缩放（--a 以 1568 设计稿宽度为基准），但字号不能一起缩：
+   * 1024/1180 宽的 iPad 会把正文压到 13–15px。这里给每类文本单独设下限，
+   * 保证正文 ≥17px、次要信息 ≥15px，与 iPadOS 正文 17pt 的基准对齐。
+   */
+  --fs-body: max(calc(22 * var(--a)), 17px);
+  --fs-secondary: max(calc(20 * var(--a)), 15px);
+  --fs-numeric: max(calc(32 * var(--a)), 24px);
+  --fs-title: max(calc(36 * var(--a)), 26px);
+  --attendance-ink: #142b50;
+  --attendance-muted: #6b7488;
+  --attendance-blue: #009cff;
+  --attendance-glass: #f6faffbb;
+  --attendance-border: #ffffffa8;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: max(env(safe-area-inset-top), calc(36 * var(--a))) max(env(safe-area-inset-right), calc(46 * var(--a))) max(env(safe-area-inset-bottom), calc(36 * var(--a))) max(env(safe-area-inset-left), calc(46 * var(--a)));
+  color: var(--attendance-ink);
+  font-family: Arial, 'Arimo', Helvetica, sans-serif;
+}
+
+/*
+ * 背景一律用「单层 background-image」。
+ * 原来这里是 linear-gradient(...), url(...) 两层叠加，浏览器没问题，但复制到 Figma 时
+ * 只认第一层（渐变），图片层被丢掉——于是 Figma 里红框处只剩一片浅蓝。
+ * 现在把「图 + 顶部渐变压暗」预先烘焙成一张图（tools/bake-backgrounds.py 生成），
+ * 单层 url() 才能完整落到 Figma 的 image fill 上。
+ */
+.attendance-landscape {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  background: url('/assets/bay-scrim.webp') center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* 天际线两块：渐变 + mask 渐隐也已经烘焙进图（带 alpha），这里不再用 mask-image，
+   同样是因为抓取脚本不采集 mask。 */
+.attendance-skyline {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: calc(475 * var(--a));
+  height: calc(300 * var(--a));
+  background: url('/assets/bay-skyline-left.webp') left top / 100% 100% no-repeat;
+}
+
+.attendance-skyline-right {
+  position: absolute;
+  top: calc(66 * var(--a));
+  left: calc(900 * var(--a));
+  width: calc(520 * var(--a));
+  height: calc(235 * var(--a));
+  background: url('/assets/bay-skyline-right.webp') left top / 100% 100% no-repeat;
+}
+
+/*
+ * 用 :where() 把特异性降到 0：这条只负责「按钮默认继承父级字体」，
+ * 绝不能盖掉各组件显式写的 font-size / font-weight（原来写成
+ * `.attendance-page button` 是 (0,1,1)，会把 .attendance-wheel-item 这类
+ * 单类选择器的字号静默重置回 16px）。
+ */
+:where(.attendance-page) :where(button, input) { font: inherit; }
+.attendance-page button { color: inherit; }
+.attendance-page button,
+.attendance-page input { -webkit-tap-highlight-color: transparent; }
+.attendance-page button:focus-visible,
+.attendance-page input:focus-visible { outline: 3px solid #1678d5; outline-offset: 4px; }
+.attendance-page button:disabled { cursor: not-allowed; opacity: .45; }
+.attendance-page button:not(:disabled) { touch-action: manipulation; }
+.attendance-page svg { display: block; flex-shrink: 0; }
+.attendance-navigation,
+.attendance-title-group { display: flex; align-items: center; }
+.attendance-back {
+  display: grid;
+  place-items: center;
+  width: calc(66 * var(--a));
+  height: calc(64 * var(--a));
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--attendance-border);
+  border-radius: 50%;
+  background: #ffffffdb;
+  box-shadow: 0 calc(7 * var(--a)) calc(20 * var(--a)) #6e91b218;
+}
+.attendance-back > svg { width: calc(30 * var(--a)); height: calc(30 * var(--a)); }
+.attendance-header { display: flex; align-items: center; justify-content: space-between; gap: calc(24 * var(--a)); min-height: calc(66 * var(--a)); margin: 0 0 calc(17 * var(--a)); }
+.attendance-title-group { min-width: 0; gap: calc(22 * var(--a)); }
+.attendance-header h1 { margin: 0; font-size: var(--fs-title); line-height: 1.16; letter-spacing: calc(-.6 * var(--a)); font-weight: 700; white-space: nowrap; }
+.attendance-toolbar { display: flex; gap: calc(16 * var(--a)); }
+.attendance-toolbar > button { display: flex; align-items: center; justify-content: center; gap: calc(12 * var(--a)); min-height: 44px; height: calc(66 * var(--a)); padding: 0 calc(23 * var(--a)); border-radius: calc(19 * var(--a)); font-size: var(--fs-body); white-space: nowrap; }
+.attendance-toolbar > button > svg { width: calc(25 * var(--a)); height: calc(25 * var(--a)); }
+.attendance-soft-button { border: 1px solid #ffffff9c; background: #f8fcffdf; box-shadow: inset 0 1px 3px #ffffff66; }
+.attendance-soft-button:hover { background: #fff; }
+.attendance-soft-button.is-editing { background: #dbedff; box-shadow: inset 0 0 0 1px #89c8ff; }
+.attendance-page .attendance-blue-button { color: #fff; border: 1px solid #41bdff; background: linear-gradient(175deg, #52baff 0%, #159eff 45%, #078aff 100%); box-shadow: inset 0 2px 4px #ffffff3b, 0 4px 8px #3a99ef0d; }
+.attendance-blue-button:hover:not(:disabled) { filter: brightness(1.045); }
+.attendance-blue-button:active:not(:disabled) { filter: brightness(.97); }
+.attendance-toolbar .attendance-confirm { min-width: calc(177 * var(--a)); font-size: var(--fs-body); }
+.attendance-panel {
+  display: flex;
+  flex-direction: column;
+  gap: calc(18 * var(--a));
+  flex: 1;
+  min-height: 0;
+  padding: calc(15 * var(--a)) calc(17 * var(--a));
+  border: 1px solid #ffffffb8;
+  border-radius: calc(27 * var(--a));
+  background: linear-gradient(115deg, #f2f8ffb8, #edf5ffc7 60%, #eaf3ffc7);
+  box-shadow: inset 0 1px 3px #ffffff86, 0 calc(13 * var(--a)) calc(40 * var(--a)) #628dc613;
+}
+.attendance-summary { display: grid; grid-template-columns: 284fr 286fr 321fr 495fr; gap: calc(18 * var(--a)); align-items: center; }
+.attendance-stat-card { display: flex; align-items: center; gap: calc(24 * var(--a)); min-width: 0; min-height: calc(117 * var(--a)); padding: calc(16 * var(--a)) calc(12 * var(--a)); border: 1px solid #ffffff66; border-radius: calc(20 * var(--a)); background: #f8fbffcc; box-shadow: inset 0 1px 2px #ffffff80; }
+.attendance-stat-icon { display: grid; place-items: center; width: calc(74 * var(--a)); height: calc(74 * var(--a)); flex: 0 0 auto; border-radius: 50%; color: var(--attendance-blue); background: linear-gradient(130deg, #fff, #ffffffa8); box-shadow: 0 calc(4 * var(--a)) calc(12 * var(--a)) #6caae609; }
+.attendance-stat-icon svg { width: calc(38 * var(--a)); height: calc(38 * var(--a)); }
+.attendance-stat-card p { margin: 0 0 calc(10 * var(--a)); font-size: var(--fs-secondary); line-height: 1.2; white-space: nowrap; }
+.attendance-stat-card strong { display: block; color: var(--attendance-blue); font-size: var(--fs-numeric); line-height: 1.15; font-weight: 700; }
+.attendance-search { display: flex; align-items: center; gap: calc(24 * var(--a)); height: calc(85 * var(--a)); min-width: 0; margin-left: calc(12 * var(--a)); margin-right: calc(10 * var(--a)); padding: 0 calc(26 * var(--a)); border: calc(9 * var(--a)) solid #ffffff68; border-radius: calc(24 * var(--a)); background: #fbfdffeb; box-shadow: 0 4px 20px #9bbedb0a, inset 0 0 0 1px #ffffffa0; color: #697b99; }
+.attendance-search > svg { width: calc(31 * var(--a)); height: calc(31 * var(--a)); }
+.attendance-search input { width: 100%; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--attendance-ink); font-size: var(--fs-body); }
+.attendance-search input::placeholder { color: #8491ab; opacity: 1; }
+.attendance-search:focus-within { box-shadow: 0 0 0 2px #80bdff; }
+.attendance-search input:focus-visible { outline: none; }
+/* 右下固定的「+」按钮会盖住最后一行，滚动区底部留出按钮高度，滚到底时表格不被遮挡 */
+.attendance-table-scroll { display: flex; flex-direction: column; flex: 1; overflow: auto; padding-bottom: calc(112 * var(--a)); border: 1px solid #ffffff73; border-radius: calc(24 * var(--a)); background: #fbfdffdd; box-shadow: inset 0 2px 3px #ffffffb3, 0 4px 18px #aac5dc0a; }
+/* 表格内的字号在全局令牌之上再放 2px：表头 15→17、正文 17→19，
+   连带单元格里的胶囊按钮 / 时间卡 / Break 数值一起长，行内才不会大小不齐 */
+.attendance-page .attendance-table { --fs-body: max(calc(24 * var(--a)), 19px); --fs-secondary: max(calc(22 * var(--a)), 17px); }
+.attendance-table { table-layout: fixed; width: 100%; flex: none; border-spacing: 0; border-collapse: separate; text-align: center; }
+.attendance-table th { height: calc(90 * var(--a)); padding: calc(10 * var(--a)) calc(5 * var(--a)); color: #27344a; background: #eaf1fc8c; font-size: var(--fs-secondary); line-height: 1.17; font-weight: 400; }
+.attendance-table td { height: calc(115 * var(--a)); padding: calc(10 * var(--a)) calc(5 * var(--a)); border-bottom: 1px solid #eaf0f8c4; color: var(--attendance-muted); font-size: var(--fs-body); line-height: 1.28; vertical-align: middle; }
+.attendance-table tr:last-child td { border-bottom: 0; }
+.attendance-table td.attendance-blue-text { color: var(--attendance-blue); }
+.attendance-cell-text { display: block; white-space: pre-line; }
+.attendance-blue-text .attendance-cell-text { position: relative; left: 50%; width: max-content; min-width: 100%; transform: translateX(-50%); white-space: pre; }
+.attendance-profile-link { padding: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.attendance-profile-link:hover { color: #007be6; text-decoration: underline; text-underline-offset: 3px; }
+/**
+ * Remark 单元格：默认是「文字 + 小图标」的轻量入口，不再用整块胶囊。
+ * 一列六行同样的实心胶囊会堆成一条蓝色色阶，抢走 Action 主按钮的注意力；
+ * 这里把重量还给文字，悬停时才浮出浅底。
+ *   is-set（已写）→ 蓝字 + 右箭头，暗示「进去看」
+ *   未写         → 灰字 + 加号，暗示「补一条」
+ */
+.attendance-remark-button { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-height: 34px; padding: 0 7px; border-radius: 9px; background: transparent; color: #8fa2b9; font-size: var(--fs-secondary); font-weight: 400; white-space: nowrap; transition: background .16s ease, color .16s ease; }
+.attendance-remark-button svg { width: 15px; height: 15px; flex-shrink: 0; }
+.attendance-remark-button:hover { background: #eaf4ff; color: #0d6fc4; }
+.attendance-remark-button:focus-visible { outline: 2px solid #8ecbff; outline-offset: 2px; }
+.attendance-remark-button.is-set { color: #1780cf; font-weight: 400; }
+.attendance-remark-button.is-set svg { opacity: .75; }
+.attendance-remark-button.is-set:hover { background: #e3f1ff; color: #0062b8; }
+.attendance-remark-button.is-set:hover svg { opacity: 1; }
+.attendance-number { display: inline-grid; place-items: center; width: calc(41 * var(--a)); height: calc(41 * var(--a)); border-radius: 50%; background: linear-gradient(140deg, #dce3ee, #c9d5e2); color: #435069; font-size: max(calc(24 * var(--a)), 16px); }
+.attendance-number.is-active { color: white; background: linear-gradient(130deg, #9cdb7f, #5fd15b); box-shadow: inset 0 1px 3px #ffffff45; }
+.attendance-time-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(3 * var(--a)); width: calc(120 * var(--a)); height: calc(92 * var(--a)); max-width: 100%; margin: 0 auto; padding: calc(5 * var(--a)); border: 1px solid #f3f5fa; border-radius: calc(16 * var(--a)); background: #ffffffdb; box-shadow: 0 calc(3 * var(--a)) calc(10 * var(--a)) #4460840c; }
+.attendance-time-card > .attendance-signature { width: calc(91 * var(--a)); height: calc(38 * var(--a)); color: #171717; }
+.attendance-time-card > .attendance-signature.is-drawn path { stroke-width: 5; }
+.attendance-time-card > .attendance-qr-mark { width: calc(35 * var(--a)); height: calc(35 * var(--a)); margin-bottom: calc(2 * var(--a)); color: #333; }
+.attendance-time-card > span { line-height: 1.05; }
+.attendance-in-button { width: calc(114 * var(--a)); height: calc(86 * var(--a)); max-width: 100%; min-height: 44px; border-radius: calc(16 * var(--a)); font-size: max(calc(31 * var(--a)), 20px) !important; font-weight: 700 !important; box-shadow: inset 0 2px 5px #ffffff80, 0 calc(4 * var(--a)) calc(11 * var(--a)) #009cff24 !important; }
+.attendance-table td:nth-child(8) { position: relative; }
+.attendance-break-value { display: inline-grid; place-items: center; min-width: 40px; min-height: 34px; padding: 0 9px; border-radius: 10px; background: #eef3f9; color: #62778f; font-size: var(--fs-secondary); font-weight: 500; }
+/* Break Hours 是可点击按钮，点开 +/- Hours 滚轮弹窗 */
+.attendance-break-button { cursor: pointer; transition: background .16s ease, color .16s ease, transform .12s ease; }
+.attendance-break-button:hover { background: #dcecff; color: #078aff; }
+.attendance-break-button:active { transform: scale(.94); }
+.attendance-break-button:focus-visible { outline: 2px solid #8ecbff; outline-offset: 2px; }
+.attendance-action-wrap { position: relative; display: flex; justify-content: center; }
+.attendance-status { display: inline-flex; align-items: center; justify-content: center; gap: calc(15 * var(--a)); width: calc(160 * var(--a)); height: calc(59 * var(--a)); flex-shrink: 0; min-height: 44px; padding: 0 calc(12 * var(--a)); border-radius: calc(35 * var(--a)); font-size: var(--fs-body) !important; font-weight: 500 !important; white-space: nowrap; }
+.attendance-caret { width: 0; height: 0; border-left: calc(8 * var(--a)) solid transparent; border-right: calc(8 * var(--a)) solid transparent; border-top: calc(9 * var(--a)) solid #fff; }
+/* 下拉三角改成内联 SVG 之后的尺寸（原来那个 border 三角保留给暂未替换的地方） */
+.attendance-caret-icon { display: block; width: calc(16 * var(--a)); height: calc(9 * var(--a)); flex-shrink: 0; }
+.attendance-status-menu { position: absolute; z-index: 3; right: calc(10 * var(--a)); bottom: calc(100% + 4px); display: flex; flex-direction: column; min-width: calc(165 * var(--a)); padding: 5px; border: 1px solid #e3edf8; border-radius: 14px; background: #f7fbff; box-shadow: 0 8px 30px #173a6724; }
+.attendance-status-menu > button { min-height: 44px; padding: 8px 14px; border-radius: 9px; background: transparent; color: #3d5b7d; text-align: left; font-size: 16px; }
+.attendance-status-menu > button:hover,
+.attendance-status-menu > button[aria-pressed="true"] { background: #dfedff; color: #087cdd; }
+.attendance-cell-input { width: 100%; min-width: 0; min-height: 44px; padding: calc(7 * var(--a)); border: 1px solid #b8d8f4; border-radius: calc(9 * var(--a)); background: #fff; color: inherit; text-align: center; font-size: max(calc(18 * var(--a)), 16px) !important; }
+.attendance-break-input { max-width: calc(80 * var(--a)); }
+.attendance-add-button { position: fixed; z-index: 4; right: calc(57 * var(--a)); bottom: max(env(safe-area-inset-bottom), calc(52 * var(--a))); display: grid; place-items: center; width: calc(88 * var(--a)); height: calc(88 * var(--a)); min-width: 52px; min-height: 52px; padding: 0; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 calc(7 * var(--a)) calc(16 * var(--a)) #1684ec3d !important; }
+.attendance-add-button > svg { width: calc(43 * var(--a)); height: calc(43 * var(--a)); stroke-width: 2.8; }
+.attendance-add-icon { display: grid; place-items: center; width: calc(68 * var(--a)); height: calc(68 * var(--a)); flex-shrink: 0; border: 1px solid #ffffffcc; border-radius: 50%; background: #f8fdff; color: var(--attendance-blue); }
+.attendance-add-icon > svg { width: calc(38 * var(--a)); height: calc(38 * var(--a)); stroke-width: 3; }
+.attendance-empty { display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 50px 20px; color: #738098; }
+.attendance-empty > svg { width: 36px; height: 36px; }
+.attendance-empty p { margin: 0; font-size: 18px; }
+.attendance-empty button { padding: 12px 18px; min-height: 44px; border-radius: 12px; color: #0788ea; background: #e2efff; }
+.attendance-toast { position: fixed; z-index: 10; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 14px; width: max-content; max-width: calc(100% - 40px); padding: 16px 16px 16px 22px; border: 1px solid #fff; border-radius: 20px; background: #f9fcff; box-shadow: 0 8px 40px #254e7c2b; transform: translateX(-50%); font-size: 19px; }
+.attendance-toast > svg { width: 27px; height: 27px; color: #168ef2; }
+.attendance-toast > button { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; padding: 10px; border-radius: 50%; background: #e7f1ff; color: #547399; }
+.attendance-dialog { width: min(540px, calc(100vw - 40px)); max-height: calc(100svh - 48px); margin: auto; padding: 0; overflow: auto; border: 1px solid #ffffffb3; border-radius: 26px; background: linear-gradient(125deg, #f8fbff, #eaf3ff); color: var(--attendance-ink); box-shadow: 0 24px 100px #17365a30; }
+.attendance-dialog:focus { outline: none; }
+.attendance-dialog::backdrop { background: #19395950; backdrop-filter: blur(5px); }
+.attendance-dialog-content { position: relative; padding: 34px; }
+.attendance-dialog h2 { margin: 0 38px 24px 0; font-size: 27px; font-weight: 700; letter-spacing: -.5px; text-wrap: balance; }
+/* 长问句里不想被连字符折断的词（e-attendance 之类） */
+.attendance-nowrap { white-space: nowrap; }
+.attendance-dialog-close { position: absolute; top: 15px; right: 15px; display: grid; place-items: center; width: 44px; height: 44px; padding: 10px; border-radius: 50%; background: #e0edfc; color: #5d7391; }
+.attendance-dialog p { margin: 0; color: #6c7c94; font-size: 16px; line-height: 1.6; }
+.attendance-dialog button { min-height: 44px; }
+.attendance-dialog .attendance-blue-button,
+.attendance-dialog .attendance-soft-button { min-height: 48px; padding: 12px 22px; border-radius: 13px; font-size: 16px; }
+.attendance-dialog .attendance-blue-button { color: #fff; }
+/* Sign in / sign out sheet — identity on top, one big signing surface. */
+.attendance-signature-sheet { width: min(760px, calc(100vw - 32px)); max-height: calc(100svh - 40px); margin: auto; padding: 0; overflow: hidden; border: 1px solid #ffffffc4; border-radius: 26px; background: linear-gradient(160deg, #f8fcff, #e7f2fe); color: var(--attendance-ink); box-shadow: 0 34px 120px #16365a3d; }
+.attendance-signature-sheet::backdrop { background: #1939594d; backdrop-filter: blur(6px); }
+.attendance-signature-sheet:focus { outline: none; }
+.attendance-signature-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #ffffffb8; background: linear-gradient(180deg, #d9ebfdd9, #eaf4ff8f); }
+.attendance-sheet-close, .attendance-sheet-confirm { display: grid; place-items: center; width: 52px; height: 52px; min-height: 44px; padding: 13px; border-radius: 50%; }
+.attendance-sheet-close { background: #e2eefb; color: #5f7592; }
+.attendance-sheet-close:hover { background: #d7e7fa; }
+.attendance-sheet-close svg, .attendance-sheet-confirm svg { width: 100%; height: 100%; color: inherit; }
+.attendance-sheet-confirm { background: #078aff; color: #fff; }
+.attendance-sheet-confirm svg path { stroke: #fff; }
+.attendance-sheet-confirm:not(:disabled):hover { background: #007be6; }
+.attendance-sheet-confirm:not(:disabled):active { background: #0070d4; }
+.attendance-sheet-confirm:disabled { background: #d3e2f3; color: #9cb1c8; cursor: default; }
+.attendance-sheet-confirm:disabled svg path { stroke: #a9bdd3; }
+.attendance-signature-identity { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.attendance-signature-kicker { color: #1593f0; font-size: 15px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
+.attendance-signature-identity strong { max-width: 100%; overflow: hidden; font-size: 27px; line-height: 1.2; font-weight: 700; letter-spacing: -.4px; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.attendance-signature-id { color: #7a8ca5; font-size: 18px; font-weight: 500; letter-spacing: 1.6px; }
+.attendance-signature-surface { position: relative; margin: 20px 24px 24px; overflow: hidden; border-radius: 20px; background: #fff; box-shadow: inset 0 0 0 1px #e4eefa, 0 2px 10px #2b4a6b0f; }
+.attendance-signature-pad { display: block; width: 100%; height: auto; aspect-ratio: 68 / 30; touch-action: none; cursor: crosshair; color: #16324f; }
+.attendance-signature-placeholder { position: absolute; inset: 0 0 66px; display: grid; place-items: center; pointer-events: none; color: #bcccdc; font-size: 24px; letter-spacing: .4px; }
+.attendance-signature-clear { position: absolute; left: 16px; bottom: 16px; min-height: 46px; padding: 0 26px; border-radius: 999px; background: #eef5fdf2; color: #5f7592; font-size: 16px; }
+.attendance-signature-clear:not(:disabled):hover { background: #e2eefc; color: #2f7fc9; }
+.attendance-signature-clear:disabled { opacity: .5; cursor: default; }
+@media (max-width: 700px) {
+  .attendance-signature-head { gap: 10px; padding: 14px; }
+  .attendance-sheet-close, .attendance-sheet-confirm { width: 46px; height: 46px; padding: 12px; }
+  .attendance-signature-kicker { font-size: 13px; letter-spacing: 1px; }
+  .attendance-signature-identity strong { font-size: 21px; }
+  .attendance-signature-id { font-size: 15px; }
+  .attendance-signature-surface { margin: 12px; border-radius: 18px; }
+  .attendance-signature-placeholder { inset: 0 0 56px; font-size: 18px; }
+  .attendance-signature-clear { left: 10px; bottom: 10px; min-height: 42px; padding: 0 20px; font-size: 15px; }
+}
+.attendance-dialog .attendance-preview-note { color: #8090a5; font-size: 12px; }
+/* 提示型弹窗（评价引导 / 提交确认）：一段居中提示 + 两个等宽按钮 */
+.attendance-dialog .attendance-prompt-text { margin: 0 0 26px; color: #43608a; font-size: 24px; line-height: 1.5; font-weight: 500; letter-spacing: 0; text-align: center; text-wrap: balance; }
+.attendance-dialog .attendance-prompt-text.is-compact { font-size: 21px; line-height: 1.55; }
+.attendance-dialog .attendance-prompt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.attendance-dialog .attendance-prompt-actions.is-single { grid-template-columns: 1fr; }
+.attendance-dialog .attendance-prompt-actions > button { min-height: 62px; padding: 0 18px; border-radius: 16px; font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+.attendance-dialog .attendance-prompt-actions .attendance-soft-button { color: #33506f; }
+.attendance-add-form { display: flex; flex-direction: column; gap: 19px; }
+.attendance-add-form label { display: flex; flex-direction: column; gap: 8px; min-width: 0; color: #49607e; font-size: 14px; }
+.attendance-add-form input { width: 100%; height: 52px; padding: 0 14px; border: 0; border-radius: 12px; background: #dceeff; color: var(--attendance-ink); font-size: 18px; }
+.attendance-ipad-picker { position: relative; }
+.attendance-ipad-picker > button { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 52px; padding: 0 16px; border-radius: 12px; background: #dceeff; color: var(--attendance-ink); font-size: 16px; text-align: left; }
+.attendance-ipad-picker > button.is-placeholder { color: #778ba5; }
+.attendance-picker-chevron { width: 10px; height: 10px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-3px); }
+.attendance-picker-menu { position: absolute; z-index: 5; top: calc(100% + 7px); left: 0; right: 0; display: grid; gap: 2px; padding: 7px; border-radius: 15px; background: #f8fcff; }
+.attendance-picker-menu button { min-height: 44px; padding: 0 12px; border-radius: 10px; background: transparent; color: #49627f; text-align: left; font-size: 16px; }
+.attendance-picker-menu button[aria-selected="true"] { background: #dceeff; color: #167fcf; font-weight: 700; }
+.attendance-form-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.attendance-qr-preview { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+.attendance-qr-preview > svg { width: 190px; height: 190px; padding: 20px; border: 1px solid #dfeaf9; border-radius: 18px; background: #fff; color: #223b5c; }
+.attendance-qr-preview h3 { margin: 0; color: var(--attendance-ink); font-size: 26px; font-weight: 700; letter-spacing: -.2px; }
+.attendance-qr-preview > p:not(.attendance-preview-note) { margin: 0; color: #43608a; font-size: 20px; font-weight: 500; }
+.attendance-dialog .attendance-qr-preview .attendance-preview-note { margin: 0; color: #6d819d; font-size: 17px; }
+.attendance-dialog .attendance-qr-preview > button { align-self: stretch; min-height: 62px; margin-top: 6px; border-radius: 16px; font-size: 20px; font-weight: 700; letter-spacing: .2px; }
+/* 人物信息卡：点 Name / ID Number 先看到他本人，再决定要不要写评价 */
+.attendance-profile { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.attendance-profile > img { width: 116px; height: 116px; margin-bottom: 14px; border-radius: 50%; object-fit: cover; box-shadow: 0 10px 24px #17365a1f; }
+.attendance-profile h3 { margin: 0 0 22px; color: var(--attendance-ink); font-size: 27px; line-height: 1.2; letter-spacing: -.4px; }
+.attendance-profile-fields { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 12px; margin-bottom: 20px; }
+.attendance-profile-fields > div { display: grid; gap: 6px; padding: 14px; border-radius: 14px; background: #dceeff; text-align: left; }
+.attendance-profile-fields span { color: #71839b; font-size: 20px; }
+.attendance-profile-fields strong { color: #197fc8; font-size: 20px; line-height: 1.25; }
+.attendance-profile-review { display: inline-flex; align-items: center; justify-content: center; gap: 8px; align-self: stretch; min-height: 58px !important; border-radius: 15px; font-size: 19px !important; font-weight: 700; }
+.attendance-profile-review svg { flex-shrink: 0; }
+
+@media (min-width: 1001px) {
+  .attendance-page { padding-top: calc(32 * var(--a)); padding-bottom: calc(32 * var(--a)); }
+  .attendance-header h1 { font-size: 34px; line-height: 1.2; letter-spacing: -.6px; font-weight: 700; }
+  .attendance-dialog:has(.attendance-add-form) { width: min(600px, calc(100vw - 48px)); }
+  .attendance-dialog:has(.attendance-add-form) h2 { font-size: 30px; }
+  .attendance-add-form { gap: 21px; }
+  .attendance-add-form label { font-size: 17px; }
+  .attendance-add-form input, .attendance-ipad-picker > button { height: 58px; font-size: 21px; }
+  .attendance-picker-menu button { min-height: 50px; font-size: 18px; }
+  .attendance-add-form .attendance-blue-button { min-height: 56px; font-size: 19px; }
+  .attendance-add-form + .attendance-preview-note { font-size: 14px; }
+  .attendance-stat-card { height: calc(85 * var(--a)); min-height: calc(85 * var(--a)); gap: calc(16 * var(--a)); padding: calc(9 * var(--a)) calc(12 * var(--a)); }
+  .attendance-stat-icon { width: calc(56 * var(--a)); height: calc(56 * var(--a)); }
+  .attendance-stat-icon svg { width: calc(31 * var(--a)); height: calc(31 * var(--a)); }
+  .attendance-stat-card p { margin-bottom: calc(4 * var(--a)); font-size: var(--fs-secondary); }
+  .attendance-stat-card strong { font-size: var(--fs-numeric); }
+}
+
+@media (min-width: 601px) and (max-width: 1000px) {
+  .attendance-page { --a: calc(100vw / 1280); padding: 32px 26px; }
+  .attendance-header { align-items: flex-start; flex-direction: column; gap: 20px; margin-top: 20px; }
+  .attendance-header h1 { font-size: 32px; }
+  .attendance-toolbar { align-self: flex-end; }
+  .attendance-summary { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .attendance-stat-card { gap: 12px; }
+  .attendance-search { grid-column: 1 / -1; margin: 0; min-height: 60px; }
+  .attendance-table { min-width: 900px; }
+  .attendance-table th { font-size: 17px; }
+  .attendance-table td { font-size: 19px; }
+  .attendance-status { font-size: 19px !important; }
+}
+
+@media (max-width: 600px) {
+  .attendance-page { --a: .65px; padding: 24px 16px; }
+  .attendance-header { align-items: flex-start; flex-direction: column; gap: 20px; margin: 24px 0 18px; }
+  .attendance-header h1 { font-size: 27px; line-height: 1.2; letter-spacing: -.6px; }
+  .attendance-title-group { gap: 14px; }
+  .attendance-title-group h1 { white-space: normal; }
+  .attendance-toolbar { align-self: stretch; gap: 8px; }
+  .attendance-toolbar > button { flex: 1; gap: 8px; padding: 0 12px; font-size: 14px; height: 46px; border-radius: 13px; }
+  .attendance-toolbar > button > svg { width: 20px; height: 20px; }
+  .attendance-toolbar .attendance-confirm { min-width: 0; font-size: 14px; }
+  .attendance-panel { padding: 12px; border-radius: 22px; gap: 15px; min-height: 0; }
+  .attendance-summary { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .attendance-stat-card { flex-direction: column; align-items: flex-start; gap: 8px; padding: 13px 10px; border-radius: 14px; }
+  .attendance-stat-icon { width: 36px; height: 36px; }
+  .attendance-stat-icon svg { width: 23px; height: 23px; }
+  .attendance-stat-card p { font-size: 12px; margin-bottom: 7px; }
+  .attendance-stat-card strong { font-size: 25px; }
+  .attendance-search { grid-column: 1 / -1; height: 54px; margin: 4px 0 0; border-width: 5px; gap: 14px; padding: 0 15px; border-radius: 17px; }
+  .attendance-search input { font-size: 16px; }
+  .attendance-search > svg { width: 23px; height: 23px; }
+  .attendance-table-scroll { border-radius: 15px; }
+  .attendance-table { min-width: 940px; }
+  .attendance-table th { font-size: 16px; }
+  .attendance-table td { height: 85px; font-size: 17px; }
+  .attendance-time-card { width: 78px; height: 62px; }
+  .attendance-status { font-size: 17px !important; width: 108px; }
+  .attendance-add-button { right: 18px; bottom: 24px; width: 64px; height: 64px; min-width: 52px; min-height: 52px; }
+  .attendance-add-icon { width: 48px; height: 48px; }
+  .attendance-dialog-content { padding: 29px 22px; }
+  .attendance-dialog h2 { font-size: 23px; }
+  .attendance-toast { padding: 10px 8px 10px 14px; gap: 10px; font-size: 17px; }
+}
+
+/* All attendance controls are intentionally flat except the floating add-staff action
+   and the E-Attendance List row buttons (which carry a gradient highlight). */
+/* 圆形返回按钮例外：保留描边和淡投影，和登录页、雇主页的返回按钮同一套玻璃质感 */
+.attendance-page button:not(.attendance-add-button):not(.e-att-send):not(.attendance-back) { border: 0 !important; box-shadow: none !important; background-image: none !important; filter: none !important; }
+.attendance-page .attendance-blue-button:not(.attendance-add-button) { background: #078aff; }
+.attendance-page .attendance-blue-button:hover:not(.attendance-add-button):not(:disabled) { background: #007be6; filter: none; }
+/* Action 胶囊的状态色：与 History - Sign In / Sign Out (Oct 21) 一致，Applied 蓝、No Show 红 */
+.attendance-page .attendance-status.is-no-show { background: #d9453d; }
+.attendance-page .attendance-status.is-no-show:hover:not(:disabled) { background: #c23a33; filter: none; }
+
+/* ---- Selection + bulk edit ---- */
+.attendance-check-cell { width: 3.4%; text-align: center; }
+/* 外框：真正承载交互的是里面那个隐藏的 input，视觉层是 .attendance-check-box */
+.attendance-check-wrap { position: relative; display: grid; place-items: center; width: 24px; height: 24px; margin: 0 auto; cursor: pointer; }
+.attendance-check { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.attendance-check-box { display: grid; place-items: center; width: 24px; height: 24px; box-sizing: border-box; border: 1.6px solid #b7cde4; border-radius: 7px; background: #fff; transition: background .14s ease, border-color .14s ease; pointer-events: none; }
+.attendance-check-wrap:hover .attendance-check-box { border-color: #7fb8e8; }
+.attendance-check-box > svg { width: 13px; height: 11px; }
+.attendance-check:checked + .attendance-check-box { border-color: #078aff; background: #078aff; }
+.attendance-check:focus { outline: none; }
+.attendance-check:focus-visible + .attendance-check-box { outline: 2px solid #8ecbff; outline-offset: 2px; }
+.attendance-table tbody tr.is-selected td { background: #f2f9ff; }
+.attendance-table tbody tr.is-selected td:first-child { border-radius: 12px 0 0 12px; }
+.attendance-toolbar > button:disabled { opacity: .42; cursor: default; }
+
+.attendance-summary.is-editing { display: flex; align-items: center; gap: calc(18 * var(--a)); }
+.attendance-summary.is-editing .attendance-editbar { flex: 1 1 auto; }
+.attendance-summary.is-editing .attendance-search { display: none; }
+.attendance-editbar { display: flex; flex-wrap: nowrap; align-items: center; gap: calc(12 * var(--a)); min-height: calc(117 * var(--a)); }
+.attendance-chip { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; gap: calc(12 * var(--a)); min-height: 48px; min-width: 0; padding: 0 calc(24 * var(--a)); border-radius: 999px; font-size: var(--fs-body); font-weight: 600; white-space: nowrap; }
+.attendance-chip.is-blue { background: #cde6ff; color: #0a5fa8; }
+.attendance-chip.is-blue:hover { background: #bcdcfb; }
+.attendance-chip.is-amber { background: #ffe9b8; color: #8a6104; }
+.attendance-chip.is-amber:hover { background: #ffdf9e; }
+.attendance-chip .attendance-caret { border-top-color: currentColor; opacity: .75; }
+
+/* ---- Wheel picker sheet ---- */
+.attendance-edit-sheet { width: min(760px, calc(100vw - 40px)); margin: auto; padding: 0; overflow: hidden; border: 1px solid #ffffffc4; border-radius: 26px; background: linear-gradient(160deg, #f9fcff, #e8f3fe); color: var(--attendance-ink); box-shadow: 0 30px 90px #16365a3d; }
+.attendance-edit-sheet::backdrop { background: #1939594d; backdrop-filter: blur(6px); }
+.attendance-edit-sheet:focus { outline: none; }
+.attendance-edit-sheet-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px 22px; border-bottom: 1px solid #ffffffb8; background: linear-gradient(180deg, #d9ebfdd9, #eaf4ff8f); }
+.attendance-edit-sheet-head strong { font-size: 24px; font-weight: 700; letter-spacing: -.3px; }
+.attendance-sheet-text { justify-self: start; min-height: 46px; padding: 0 6px; background: transparent; color: #5b7695; font-size: 19px; font-weight: 600; }
+.attendance-sheet-text.is-primary { justify-self: end; color: #078aff; }
+.attendance-sheet-text:hover { color: #0076e0; }
+.attendance-edit-sheet-body { padding: 22px 24px 24px; }
+.attendance-edit-sheet-body .attendance-preview-note { margin-top: 18px; text-align: center; font-size: 17px; }
+.attendance-edit-select { position: relative; }
+.attendance-edit-select > button { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; min-height: 64px; padding: 0 24px; border-radius: 15px; background: #fff; color: #12314f; font-size: var(--fs-body); font-weight: 500; }
+.attendance-edit-select > button:hover { background: #f4faff; }
+.attendance-edit-select .attendance-caret { border-left-width: 7px; border-right-width: 7px; border-top-width: 8px; border-top-color: #7d9cbc; }
+.attendance-edit-select.is-open > button { background: #eef7ff; }
+.attendance-edit-options { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 8px; border-radius: 16px; background: #eaf4ff; }
+.attendance-edit-options > button { min-height: 60px; padding: 0 20px; border-radius: 12px; background: transparent; color: #2c5578; font-size: var(--fs-body); text-align: left; }
+.attendance-edit-options > button:hover { background: #dceeff; }
+.attendance-edit-options > button[aria-selected="true"] { background: #078aff; color: #fff; font-weight: 600; }
+
+.attendance-wheel { position: relative; display: flex; gap: 10px; height: 260px; }
+.attendance-wheel::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 54px; transform: translateY(-50%); border-radius: 14px; background: #dcecfd; }
+.attendance-wheel.is-compact { max-width: 400px; margin: 0 auto; gap: 44px; }
+/* 单列（房间数这类纯计数）收窄一点，避免数字孤零零挂在正中 */
+.attendance-wheel.is-compact.is-single { max-width: calc(268 * var(--a)); }
+.attendance-wheel-col { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 18%, #000 82%, transparent 100%); }
+.attendance-wheel-col::-webkit-scrollbar { display: none; }
+.attendance-wheel-pad { height: 103px; }
+.attendance-wheel-col .attendance-wheel-item { display: block; width: 100%; height: 54px; padding: 0; background: transparent; scroll-snap-align: center; color: #6f8aa6; font-size: 26px; font-variant-numeric: tabular-nums; letter-spacing: .4px; }
+.attendance-wheel-col .attendance-wheel-item.is-active { color: #12314f; font-weight: 600; }
+
+.attendance-remark-editor { width: 100%; min-height: 176px; padding: 18px 20px; border: 0; border-radius: 16px; background: #fff; color: #12314f; font-family: inherit; font-size: 20px; line-height: 1.55; resize: none; }
+/* 备注弹窗里的输入框留一点气泡间距（History 明细页同一个弹窗也吃这条） */
+.attendance-dialog .attendance-remark-editor { margin-bottom: 22px; }
+.attendance-remark-editor::placeholder { color: #a3b6cb; }
+.attendance-remark-editor:focus { outline: 2px solid #8ecbff; outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .attendance-editbar { gap: 8px; }
+  .attendance-chip { flex: 1 1 45%; justify-content: center; padding: 0 14px; font-size: 14px; }
+  .attendance-wheel { height: 220px; }
+  .attendance-wheel-pad { height: 83px; }
+  .attendance-edit-sheet-head strong { font-size: 20px; }
+  .attendance-sheet-text { font-size: 15px; }
+}
+
+/* 1024 宽的 iPad 横屏（视口高 768 左右）里，加人弹窗用大尺寸会顶出屏幕，
+   这里给矮屏做一档紧凑值，保证 Add staff 按钮一屏可见。 */
+@media (min-width: 1001px) and (max-height: 860px) {
+  .attendance-dialog:has(.attendance-add-form) .attendance-dialog-content { padding: 26px; }
+  .attendance-dialog:has(.attendance-add-form) h2 { margin-bottom: 18px; font-size: 26px; }
+  .attendance-add-form { gap: 13px; }
+  .attendance-add-form label { font-size: 15px; gap: 5px; }
+  .attendance-add-form input,
+  .attendance-ipad-picker > button { height: 46px; font-size: 17px; }
+  .attendance-add-form .attendance-blue-button { min-height: 50px; font-size: 18px; }
+}
+
+/* Full name / Gender 由 ID Number 自动带出，只读展示（视觉与输入框同高，底色更淡） */
+.attendance-add-form .attendance-readonly {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: #eaf3fe;
+  color: var(--attendance-ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+.attendance-add-form .attendance-readonly.is-empty {
+  color: #93a6bc;
+  font-weight: 400;
+}
+
+@media (min-width: 1001px) {
+  .attendance-add-form .attendance-readonly { height: 58px; font-size: 19px; }
+}
+@media (min-width: 1001px) and (max-height: 860px) {
+  .attendance-add-form .attendance-readonly { height: 46px; font-size: 17px; }
+}
+
+/* ---- 空数据 / 加载中 / 加载失败 / 断网 的状态视图 ---- */
+/* 这些视图会随页面一起被复制到 Figma，所以全部用真实元素 + 内联 SVG，不靠伪元素 */
+.attendance-table-scroll.is-state { display: flex; flex-direction: column; padding-bottom: 0; }
+.attendance-state { display: flex; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: calc(16 * var(--a)); padding: calc(48 * var(--a)) calc(28 * var(--a)); text-align: center; }
+.attendance-state-icon { display: grid; place-items: center; width: calc(132 * var(--a)); height: calc(132 * var(--a)); border: 1px solid #e2eefc; border-radius: 50%; background: linear-gradient(150deg, #f4f9ff, #dfeefe); box-shadow: 0 calc(12 * var(--a)) calc(30 * var(--a)) #5f8fc61f; color: #078aff; }
+.attendance-state-icon > svg { width: calc(62 * var(--a)); height: calc(62 * var(--a)); }
+.attendance-state h2 { margin: 0; max-width: calc(760 * var(--a)); color: #142b50; font-size: max(calc(34 * var(--a)), 23px); line-height: 1.24; letter-spacing: calc(-.4 * var(--a)); font-weight: 700; text-wrap: balance; }
+.attendance-state p { margin: 0; max-width: calc(640 * var(--a)); color: #6b7488; font-size: max(calc(22 * var(--a)), 16px); line-height: 1.55; }
+.attendance-state-actions { display: flex; align-items: center; gap: calc(10 * var(--a)); margin-top: calc(8 * var(--a)); }
+.attendance-state-actions > .attendance-blue-button { min-height: 48px; height: calc(66 * var(--a)); padding: 0 calc(38 * var(--a)); border-radius: calc(19 * var(--a)); font-size: max(calc(22 * var(--a)), 16px); font-weight: 700; }
+.attendance-state-link { display: inline-flex; align-items: center; min-height: 48px; height: calc(66 * var(--a)); padding: 0 calc(26 * var(--a)); background: transparent; color: #3d6fa8; font-size: max(calc(22 * var(--a)), 16px); font-weight: 700; }
+.attendance-state-link:hover { color: #078aff; }
+.attendance-state-link:focus-visible { outline: 2px solid #8ecbff; outline-offset: 3px; }
+/* 四种状态（空数据 / 搜索无结果 / 加载失败 / 断网）共用同一套图标、字号与按钮规格，
+   只有容器内边距和间距按可用空间微调，配色一律用品牌蓝，不按语义换色 */
+.attendance-state.is-compact { gap: calc(10 * var(--a)); padding: calc(26 * var(--a)) calc(24 * var(--a)) calc(40 * var(--a)); }
+
+/* 加载骨架：灰条是真实 span，复制到 Figma 会是一排圆角矩形 */
+.attendance-skeleton { display: inline-block; height: calc(16 * var(--a)); min-height: 10px; border-radius: 999px; background: #e2edfa; vertical-align: middle; }
+.attendance-skeleton.is-check { width: 16px !important; height: 16px; border-radius: 6px; }
+.attendance-skeleton.is-stat { display: block; width: calc(96 * var(--a)); height: max(calc(30 * var(--a)), 20px); margin-top: calc(4 * var(--a)); }
+.attendance-skeleton-row td { border-bottom: 1px solid #eef4fb; }
+.attendance-search input:disabled { color: #93a6bc; }
+
+@media (max-width: 700px) {
+  .attendance-state { gap: 12px; padding: 34px 16px; }
+  .attendance-state-icon { width: 92px; height: 92px; }
+  .attendance-state-icon > svg { width: 44px; height: 44px; }
+  .attendance-state h2 { font-size: 21px; }
+  .attendance-state p { font-size: 15px; }
+  .attendance-state-actions > .attendance-blue-button { height: 52px; padding: 0 26px; font-size: 16px; }
+  .attendance-state-link { height: 52px; padding: 0 16px; font-size: 16px; }
+}

@@ -1,0 +1,776 @@
+/* E-Attendance List — reuses the attendance shell (background, header, panel)
+   so the page reads as part of the same Sign In / Sign Out family. */
+
+.e-att-page .attendance-panel.e-att-panel {
+  flex: 0 0 auto;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.e-att-head,
+.e-att-row {
+  display: grid;
+  grid-template-columns: 1.2fr .85fr .7fr 1fr calc(104 * var(--a));
+  align-items: center;
+  padding: 0 calc(26 * var(--a));
+}
+
+.e-att-head {
+  height: calc(90 * var(--a));
+  border-bottom: 1px solid #dfeaf7;
+  background: #f4f9fff2;
+  color: #4a6480;
+  font-size: calc(var(--fs-secondary) + 2px);
+}
+.e-att-head > span {
+  text-align: center;
+}
+
+.e-att-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.e-att-row {
+  min-height: calc(112 * var(--a));
+  border-bottom: 1px solid #dfeaf7;
+  font-size: calc(var(--fs-body) + 2px);
+  transition: background .16s;
+}
+.e-att-row:last-child {
+  border-bottom: 0;
+}
+.e-att-row:hover {
+  background: #f2f9ff9c;
+}
+
+.e-att-date {
+  text-align: center;
+  color: #27344a;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.e-att-mode {
+  justify-self: center;
+  color: #5d7691;
+  white-space: nowrap;
+}
+.e-att-mode.is-room {
+  color: #1f78cc;
+  font-weight: 500;
+}
+
+.e-att-progress {
+  text-align: center;
+  color: #6d829c;
+}
+.e-att-progress b {
+  color: var(--attendance-blue);
+  font-weight: 700;
+}
+.e-att-progress i {
+  margin: 0 2px;
+  color: #a9b8c9;
+  font-style: normal;
+}
+
+.e-att-employer {
+  text-align: center;
+  color: #27344a;
+}
+
+.attendance-page .e-att-send {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: calc(72 * var(--a));
+  height: calc(58 * var(--a));
+  min-height: 44px;
+  border: 0;
+  border-radius: calc(16 * var(--a));
+  background: #2a8aff;
+  color: #fff;
+  transition: background .16s, transform .16s;
+}
+.attendance-page .e-att-send:hover {
+  background: #0f74e6;
+}
+.attendance-page .e-att-send:active {
+  transform: scale(.96);
+}
+.attendance-page .e-att-send.is-done {
+  background: #2fae70;
+  color: #fff;
+}
+.attendance-page .e-att-send.is-done:hover {
+  background: #26935e;
+}
+
+.e-att-end {
+  margin: 0;
+  padding: calc(24 * var(--a)) 0;
+  border-top: 1px solid #dfeaf7;
+  color: #8a9cb1;
+  font-size: var(--fs-secondary);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .e-att-head,
+  .e-att-row {
+    grid-template-columns: 1.15fr .9fr .6fr 1fr calc(88 * var(--a));
+    padding: 0 calc(16 * var(--a));
+  }
+  .e-att-row {
+    min-height: 88px;
+  }
+  .e-att-date {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .e-att-head {
+    display: none;
+  }
+  .e-att-row {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    min-height: 0;
+    padding: 16px 74px 16px 18px;
+  }
+  .e-att-date {
+    width: 100%;
+    text-align: left;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .e-att-employer {
+    text-align: left;
+  }
+  .attendance-page .e-att-send {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    width: 56px;
+    height: 48px;
+    transform: translateY(-50%);
+  }
+  .attendance-page .e-att-send:active {
+    transform: translateY(-50%) scale(.96);
+  }
+  .e-att-end {
+    padding: 24px 0;
+  }
+}
+
+/* ---- Date range picker ---- */
+.e-date-trigger.is-set {
+  border-color: #cbe4ff;
+  background: #e6f2ff;
+  color: #1476d4;
+}
+
+.e-date-dialog {
+  width: min(520px, calc(100vw - 40px));
+}
+
+.e-date-fields {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.e-date-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 72px;
+  padding: 0 22px;
+  border: 1px solid #ffffff;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 14px #4a7cab14;
+}
+.e-date-label {
+  color: #5d7691;
+  font-size: 19px;
+  white-space: nowrap;
+}
+.e-date-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #9aabc0;
+  font-size: 19px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.e-date-value.is-set {
+  color: var(--attendance-ink);
+}
+.e-date-value > svg {
+  color: #5d7691;
+}
+.e-date-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.e-date-field:focus-within {
+  box-shadow: 0 0 0 2px #83b8f4, 0 3px 14px #4a7cab14;
+}
+
+@media (max-width: 600px) {
+  .e-date-field {
+    min-height: 62px;
+    padding: 0 16px;
+  }
+  .e-date-label,
+  .e-date-value {
+    font-size: 17px;
+  }
+}
+
+/* ---- Detail sheet (roster of one submitted list) ---- */
+.e-att-row.is-clickable {
+  cursor: pointer;
+}
+
+.e-att-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(340 * var(--a));
+  min-width: 200px;
+  height: calc(66 * var(--a));
+  min-height: 44px;
+  padding: 0 calc(20 * var(--a));
+  border: 1px solid #ffffff9c;
+  border-radius: calc(19 * var(--a));
+  background: #f8fcffdf;
+  box-shadow: inset 0 1px 3px #ffffff66;
+  color: #7e93ac;
+}
+.e-att-search > svg {
+  flex: 0 0 auto;
+}
+.e-att-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--attendance-ink);
+  font-family: inherit;
+  font-size: var(--fs-secondary);
+  outline: none;
+}
+.e-att-search input::placeholder {
+  color: #9aabc0;
+}
+
+.e-att-detail-table tbody tr:hover td {
+  background: #f4faff9c;
+}
+
+.e-att-empty {
+  margin: 0;
+  padding: 48px 20px;
+  color: #7f93ab;
+  font-size: var(--fs-body);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .e-att-search {
+    width: 100%;
+    height: 56px;
+  }
+  /* 5 列够窄，不需要考勤页那条 900px 最小宽度（否则竖屏会横向溢出） */
+  .e-att-detail-table {
+    min-width: 0;
+  }
+  .e-att-detail-table th,
+  .e-att-detail-table td {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}
+
+/* ---- History ---- */
+/* 比 E-Attendance List 多一列 Status，所以单独一套栅格，其余行样式全部复用 */
+.e-hist-head,
+.e-hist-row {
+  display: grid;
+  grid-template-columns: 1.5fr .8fr .65fr 1.05fr 1.05fr calc(104 * var(--a));
+  align-items: center;
+  padding: 0 calc(26 * var(--a));
+}
+
+.e-hist-head {
+  height: calc(90 * var(--a));
+  border-bottom: 1px solid #dfeaf7;
+  background: #f4f9fff2;
+  color: #4a6480;
+  font-size: calc(var(--fs-secondary) + 2px);
+}
+.e-hist-head > span {
+  text-align: center;
+}
+
+.e-hist-row {
+  min-height: calc(112 * var(--a));
+  border-bottom: 1px solid #dfeaf7;
+  font-size: calc(var(--fs-body) + 2px);
+  transition: background .16s;
+}
+.e-hist-row:last-child {
+  border-bottom: 0;
+}
+.e-hist-row:hover {
+  background: #f2f9ff9c;
+}
+
+/* Revised 绿字带修改时间，Pending 琥珀色，两行都居中 */.e-hist-status {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.e-hist-status.is-sent {
+  color: #1f78cc;
+}
+.e-hist-status.is-revised {
+  color: #2fae70;
+}
+.e-hist-status.is-pending {
+  color: #e39b1c;
+}
+.e-hist-status em {
+  color: #8a9cb1;
+  font-size: calc(var(--fs-secondary) + 1px);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.attendance-page .e-hist-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10 * var(--a));
+  height: calc(66 * var(--a));
+  min-height: 44px;
+  padding: 0 calc(24 * var(--a));
+  border-radius: calc(19 * var(--a));
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 空结果时别让整块面板缩成一条，留出和列表相当的高度 */
+.e-att-end.is-empty {
+  padding: calc(88 * var(--a)) 0;
+}
+
+/* Summary 按钮：尺寸/字号/颜色跟右边的 Status 下拉同一套，文字左对齐、日历图标靠右 */
+.attendance-toolbar > .e-hist-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(10 * var(--a));
+  min-width: calc(196 * var(--a));
+  height: calc(66 * var(--a));
+  min-height: 44px;
+  padding: 0 calc(20 * var(--a));
+  border-radius: calc(19 * var(--a));
+  color: var(--attendance-ink);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.attendance-toolbar > .e-hist-summary > svg {
+  flex-shrink: 0;
+  color: #6b86a4;
+}
+
+.attendance-toolbar > .e-hist-summary.is-set {
+  background: #e6f2ff;
+  color: #1476d4;
+}
+
+.attendance-toolbar > .e-hist-summary.is-set > svg {
+  color: inherit;
+}
+
+/* History 的日期筛选只留图标（文案在 aria-label / title 里），方方正正一颗 */
+.attendance-toolbar > .e-date-trigger.is-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(66 * var(--a));
+  min-width: 44px;
+  padding: 0;
+}
+
+.e-hist-picker {
+  position: relative;
+}
+.e-hist-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(10 * var(--a));
+  min-width: calc(196 * var(--a));
+  height: calc(66 * var(--a));
+  min-height: 44px;
+  padding: 0 calc(20 * var(--a));
+  border-radius: calc(19 * var(--a));
+  color: #33506f;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.e-hist-picker-trigger > svg {
+  flex-shrink: 0;
+  color: #6b86a4;
+}
+
+.e-hist-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  gap: 2px;
+  min-width: 100%;
+  padding: 8px;
+  border-radius: 16px;
+  background: #f8fcff;
+  box-shadow: 0 18px 44px #17365a2e;
+}
+.e-hist-menu button {
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 11px;
+  background: transparent;
+  color: #49627f;
+  font-size: var(--fs-secondary);
+  text-align: left;
+  white-space: nowrap;
+}
+.e-hist-menu button[aria-selected="true"] {
+  background: #dceeff;
+  color: #167fcf;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .e-hist-head,
+  .e-hist-row {
+    grid-template-columns: 1.4fr .8fr .6fr 1fr 1fr calc(88 * var(--a));
+    padding: 0 calc(16 * var(--a));
+  }
+  .e-hist-row {
+    min-height: 96px;
+  }
+  .attendance-page .e-hist-export span {
+    display: none;
+  }
+  .attendance-page .e-hist-export {
+    padding: 0 calc(20 * var(--a));
+  }
+  .e-hist-picker-trigger {
+    min-width: 0;
+  }
+  .attendance-toolbar > .e-hist-summary {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .e-hist-toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .e-hist-head {
+    display: none;
+  }
+  .e-hist-row {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    min-height: 0;
+    padding: 16px 74px 16px 18px;
+  }
+  .e-hist-row .e-att-date {
+    width: 100%;
+    text-align: left;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .e-hist-status {
+    justify-items: start;
+  }
+  .e-hist-row .e-att-send {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    width: 56px;
+    height: 48px;
+    transform: translateY(-50%);
+  }
+}
+
+/* ---- History detail ----
+   一张已提交单据的完整打卡记录：11 列（比 E-Attendance 明细多出 Time In / Time Out /
+   Break Hours / Total / Action / Remark），外壳、表头、表格继续沿用同一套。 */
+.h-det-page .attendance-header h1 {
+  font-size: var(--fs-title);
+}
+
+/* 右上 Edit / Revise：直接套 Sign In / Sign Out 顶栏那一组（白底胶囊 + 蓝底主按钮），
+   连图标都用那一页的自绘 SVG，这里不需要额外的覆盖样式 */
+.h-det-toolbar > .attendance-blue-button {
+  /* 和 Sign In 页那颗 Confirm 同字号（蓝底主按钮比白底胶囊大一号） */
+  font-size: var(--fs-body);
+}
+
+/* 第二行：左边 Total Hours 胶囊，右边 Search IC No. */
+.h-det-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(20 * var(--a));
+  margin-bottom: calc(15 * var(--a));
+}
+
+.h-det-hours {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10 * var(--a));
+  min-height: calc(66 * var(--a));
+  margin: 0;
+  padding: 0 calc(22 * var(--a));
+  border: 1px solid #ffffff9c;
+  border-radius: calc(19 * var(--a));
+  background: #f8fcffdf;
+  box-shadow: inset 0 1px 3px #ffffff66;
+  color: #4a6480;
+  font-size: var(--fs-secondary);
+  white-space: nowrap;
+}
+.h-det-hours b {
+  color: #e9a316;
+  font-size: calc(var(--fs-body) + 2px);
+  font-weight: 700;
+}
+
+.h-det-search {
+  width: calc(380 * var(--a));
+}
+
+/* 勾选行后点 Edit：Total Hours 让位给这三颗批量编辑胶囊（同 Sign In 页那组） */
+.h-det-bar.is-editing .attendance-editbar {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  min-height: calc(66 * var(--a));
+  gap: calc(14 * var(--a));
+  /* 和下面表格面板的左缘对齐 */
+  padding-left: calc(10 * var(--a));
+}
+.h-det-bar.is-editing .attendance-chip {
+  flex: 0 0 auto;
+  min-width: calc(210 * var(--a));
+  min-height: calc(58 * var(--a));
+  padding: 0 calc(26 * var(--a));
+}
+
+/* 只有四行，不撑满整屏 */
+.e-att-page .attendance-panel.h-det-panel {
+  flex: 0 0 auto;
+}
+
+/* 表头 / 单元格字号跟着 Sign In / Sign Out 走，不另外降一档 */
+.h-det-table th {
+  white-space: nowrap;
+}
+
+/* Time In / Time Out 直接用 Sign In 页的白色时间卡（签名 + 时间上下叠） */
+.h-det-table .attendance-time-card > span {
+  color: #4a6480;
+}
+
+/* Break Hours：和 Sign In 页一样是胶囊按钮，点开滚轮直接设值 */
+.h-det-table .h-det-break {
+  width: calc(58 * var(--a));
+  min-width: 44px;
+  height: calc(45 * var(--a));
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #eef3f9;
+  color: #62778f;
+  font-family: inherit;
+  font-size: var(--fs-secondary);
+  font-weight: 500;
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+  transition: background .16s ease, color .16s ease, transform .12s ease;
+}
+.h-det-table .h-det-break:hover {
+  background: #dcecff;
+  color: #078aff;
+}
+.h-det-table .h-det-break:active {
+  transform: scale(.94);
+}
+.h-det-table .h-det-break:focus-visible {
+  outline: 2px solid #8ecbff;
+  outline-offset: 2px;
+}
+
+/* Action：Sign In 页那颗 Applied 胶囊 + 下拉三角，只有 Applied / No Show 两态
+   （No Show 的红色配色统一在 attendance.css 的 .attendance-status.is-no-show 里） */
+
+/* Revise 弹窗里的问句：字号颜色跟 Confirm attendance 的正文一致，限宽让它像图里那样居中折两行 */
+.attendance-dialog .attendance-prompt-text.h-det-revise-text {
+  max-width: 25rem;
+  margin-inline: auto;
+}
+
+/* 菜单默认向上弹（和 Sign In 一致），头两行往下弹，免得被表头裁掉 */
+.h-det-menu.is-down {
+  top: calc(100% + 4px);
+  bottom: auto;
+}
+
+/* 备注弹窗里的输入框留一点气泡间距 */
+.attendance-dialog .h-det-remark-editor {
+  margin-bottom: 22px;
+}
+
+/* 左下角的经理签名：默认展开，点右上角小圆钮收起成一颗胶囊 */
+.h-sign {
+  position: fixed;
+  z-index: 6;
+  left: calc(46 * var(--a));
+  bottom: max(env(safe-area-inset-bottom), calc(30 * var(--a)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(4 * var(--a));
+  width: calc(330 * var(--a));
+  padding: calc(12 * var(--a)) calc(18 * var(--a)) calc(10 * var(--a));
+  border: 1px solid #ffffffcc;
+  border-radius: calc(20 * var(--a));
+  background: #fbfdffef;
+  box-shadow: 0 calc(8 * var(--a)) calc(26 * var(--a)) #17365a1f;
+}
+.h-sign.is-closed {
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.h-sign-toggle {
+  position: absolute;
+  top: calc(9 * var(--a));
+  right: calc(9 * var(--a));
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: #e8f2ff;
+  color: #4d6d92;
+}
+.h-sign-toggle:hover {
+  background: #d9e9ff;
+}
+.h-sign-toggle > svg {
+  transform: rotate(180deg);
+}
+
+.h-sign-mark {
+  width: calc(258 * var(--a));
+  height: calc(106 * var(--a));
+}
+
+.h-sign-caption {
+  color: #7b8ba1;
+  font-size: var(--fs-secondary);
+}
+
+.h-sign-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(8 * var(--a));
+  min-height: 46px;
+  padding: 0 calc(16 * var(--a));
+  border: 1px solid #ffffffcc;
+  border-radius: calc(15 * var(--a));
+  background: #fbfdffef;
+  color: #4d6d92;
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 calc(6 * var(--a)) calc(18 * var(--a)) #17365a1a;
+}
+.h-sign-handle > svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 900px) {
+  .h-det-page .attendance-header h1 {
+    font-size: 22px;
+  }
+  .h-det-hours {
+    min-height: 52px;
+    padding: 0 14px;
+  }
+  .h-det-search {
+    width: 100%;
+    height: 52px;
+  }
+  .h-det-bar {
+    flex-wrap: wrap;
+  }
+  .h-det-table {
+    min-width: 900px;
+  }
+  .h-sign {
+    left: 16px;
+    bottom: 16px;
+    width: 240px;
+  }
+  .h-sign-mark {
+    width: 190px;
+    height: 78px;
+  }
+}

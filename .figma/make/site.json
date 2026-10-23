@@ -1,0 +1,13 @@
+{
+  "description": "Recreates webpage layouts from screenshots with precise spacing, rounded corners, shadows, and editable buttons, cards, and navbars for easy design editing.",
+  "icons": {
+    "icon": "/favicon.png"
+  },
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

@@ -1,0 +1,28 @@
+/*
+ * 马来西亚（MY）专属样式。
+ *
+ * 两套页面共用 src/*.css 里的全部 class，这个文件只负责「马来西亚和新加坡不一样」
+ * 的那部分。约定：所有选择器都以 `html.region-my` 开头（App.tsx 在切换地区时会给
+ * <html> 加这个 class），这样两边互不干扰。
+ *
+ * 只改结构不改样式的，直接改 src/my/ 下的页面组件即可，不需要动这里。
+ */
+
+/* ── 城市背景 ──────────────────────────────────────────────
+   新加坡用的是烘焙过的新加坡海湾图（登录页 singapore-bay / 工作台 bay-cover-employer
+   / 评价 pages bay-cover-reviews / 考勤页 bay-scrim + 两层天际线）。
+   马来西亚统一换成吉隆坡城市插画，四套壳子一次覆盖，避免漏页面。
+   注意保持「单层 background」，Figma 抓取只认第一层。 */
+html.region-my .landscape,
+html.region-my .employer-landscape,
+html.region-my .reviews-landscape,
+html.region-my .write-review-landscape,
+html.region-my .attendance-landscape {
+  background: url("/assets/kl-city.webp") center / cover no-repeat;
+}
+
+/* 考勤页的那两层天际线是新加坡图的切片，马来西亚用整张城市图，直接不渲染 */
+html.region-my .attendance-skyline,
+html.region-my .attendance-skyline-right {
+  display: none;
+}
