@@ -1,8 +1,38 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { AttendanceDialog } from "./AttendancePage"
+import { SelectMenu } from "./SelectMenu"
 import "../employer.css"
 
 type DeptIconName = "scan" | "mail" | "settings" | "close"
+
+/** 企业名右侧的下拉三角：和 SelectMenu 用同一段路径画法（fill + stroke 同色） */
+function DeptCaret() {
+  return (
+    <svg
+      viewBox="0 0 16 9"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="geometricPrecision"
+      aria-hidden="true"
+    >
+      <path
+        d="M0.9 1.1h14.2L8 7.9z"
+        fill="#2f5f92"
+        stroke="#2f5f92"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** 部门列表：Hong Ye Group 本身就是其中一个部门，默认选中它 */
+const DEPARTMENT_OPTIONS = [
+  "Hong Ye Group",
+  "Banquet",
+  "F&B Service",
+  "Kitchen",
+  "Housekeeping",
+]
 
 /**
  * 三个入口图标统一成「蓝色粗描边 + 浅蓝填充」的两段式画法：
@@ -115,6 +145,11 @@ export default function DepartmentHomePage({
 }) {
   const [openMenu, setOpenMenu] = useState<"scan" | "settings" | null>(null)
   const [confirmLogout, setConfirmLogout] = useState(false)
+  /** 当前部门；Hong Ye Group 自己也是一个部门，所以默认就是它 */
+  const [department, setDepartment] = useState("Hong Ye Group")
+  /** 部门选择弹窗与它的草稿值（点 Cancel 不影响头部） */
+  const [deptPicker, setDeptPicker] = useState(false)
+  const [deptDraft, setDeptDraft] = useState("")
   /** 还没做的模块点进来的提示 */
   const [notice, setNotice] = useState("")
   const actionsRef = useRef<HTMLDivElement>(null)
@@ -141,18 +176,34 @@ export default function DepartmentHomePage({
       <div className="employer-landscape" aria-hidden="true" />
 
       <header className="dept-header">
-        {/* LOGO + 企业名整块可点：进 Company Information（参考稿的 Employer Info） */}
-        <button
-          type="button"
-          className="dept-brand"
-          onClick={onOpenCompanyInfo}
-          aria-label="Open company information"
-        >
-          <span className="dept-logo">
-            <img src="/favicon.png" alt="Hong Ye Group logo" />
-          </span>
-          <span className="dept-brand-name">Hong Ye Group</span>
-        </button>
+        {/* LOGO + 企业名整块可点：进 Company Information（参考稿的 Employer Info）；
+            右侧三角单独开「部门选择」弹窗，所以两者不能共用同一个 button */}
+        <div className="dept-brand-row">
+          <button
+            type="button"
+            className="dept-brand"
+            onClick={onOpenCompanyInfo}
+            aria-label="Open company information"
+          >
+            <span className="dept-logo">
+              <img src="/favicon.png" alt="Hong Ye Group logo" />
+            </span>
+            <span className="dept-brand-name">{department}</span>
+          </button>
+          <button
+            type="button"
+            className="dept-brand-toggle"
+            aria-label="Switch department"
+            aria-haspopup="dialog"
+            aria-expanded={deptPicker}
+            onClick={() => {
+              setDeptDraft(department)
+              setDeptPicker(true)
+            }}
+          >
+            <DeptCaret />
+          </button>
+        </div>
         <div className="dept-actions" ref={actionsRef}>
           <div className="dept-scan">
             <button
@@ -287,6 +338,48 @@ export default function DepartmentHomePage({
             <DeptIcon name="close" />
           </button>
         </div>
+      )}
+
+      {deptPicker && (
+        <AttendanceDialog
+          title="Select Department"
+          className="dept-picker-dialog"
+          onClose={() => setDeptPicker(false)}
+        >
+          <p className="dept-picker-text">
+            Please select the department you want to open.
+          </p>
+          <div className="dept-picker">
+            <SelectMenu
+              ariaLabel="Department"
+              value={deptDraft}
+              placeholder="Select the Department"
+              options={DEPARTMENT_OPTIONS}
+              hidePlaceholder
+              onChange={setDeptDraft}
+            />
+          </div>
+          <div className="attendance-prompt-actions dept-picker-actions">
+            <button
+              type="button"
+              className="attendance-soft-button"
+              onClick={() => setDeptPicker(false)}
+            >
+              <span>Cancel</span>
+            </button>
+            <button
+              type="button"
+              className="attendance-blue-button"
+              disabled={!deptDraft}
+              onClick={() => {
+                setDepartment(deptDraft)
+                setDeptPicker(false)
+              }}
+            >
+              <span>Confirm</span>
+            </button>
+          </div>
+        </AttendanceDialog>
       )}
 
       {confirmLogout && (

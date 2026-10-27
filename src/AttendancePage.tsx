@@ -16,6 +16,7 @@ import { AddStaffForm } from "./AddStaffForm"
 import AttendanceCheck from "./AttendanceCheck"
 import { StaffProfileDialog } from "./StaffProfileDialog"
 import PageStateSwitcher, { type PageState } from "./PageStateSwitcher"
+import BackIcon from "./BackIcon"
 import "./attendance.css"
 
 type AttendanceIconName = "back" | "team-checkin" | "calendar-checkout" | "work-hours" | "search" | "edit" | "confirm" | "plus" | "close"
@@ -430,14 +431,28 @@ const DATE_OPTIONS = Array.from({ length: 2 }, (_, index) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
 })
 
+const EN_MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+]
+
+/** 结束时间可以跨到明天，滚轮里写「Today 27 Oct」比裸 ISO 好认 */
+function dateLabel(value: string) {
+  const [, month, day] = value.split("-").map(Number)
+  return `${value === DATE_OPTIONS[0] ? "Today" : "Tomorrow"} ${day} ${EN_MONTHS[month - 1]}`
+}
+
 function WheelColumn({
   items,
   value,
   onChange,
+  formatLabel,
 }: {
   items: string[]
   value: string
   onChange: (value: string) => void
+  /** 只影响显示，值仍是原始字符串（日期列要显示成「Today 27 Oct」） */
+  formatLabel?: (item: string) => string
 }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -472,7 +487,7 @@ function WheelColumn({
             })
           }}
         >
-          {item}
+          {formatLabel ? formatLabel(item) : item}
         </button>
       ))}
       <div className="attendance-wheel-pad" />
@@ -805,7 +820,12 @@ export function TimeSheet({
     >
       <div className="attendance-wheel">
         {withDate && (
-          <WheelColumn items={DATE_OPTIONS} value={date} onChange={setDate} />
+          <WheelColumn
+            items={DATE_OPTIONS}
+            value={date}
+            onChange={setDate}
+            formatLabel={dateLabel}
+          />
         )}
         <WheelColumn
           items={HOUR_OPTIONS}
@@ -1070,7 +1090,8 @@ export default function AttendancePage({
   billing = "hour",
 }: {
   onBack: () => void
-  onWriteReview: (staff: StaffRef) => void
+  /** target = "reviews" 时代表从人物卡进来看评价，先落在 Staff Reviews 页 */
+  onWriteReview: (staff: StaffRef, target?: "reviews" | "write-review") => void
   onBatchReview: (staff: StaffRef[]) => void
   /** Success 弹窗里的 Check History → 跳 History 列表 */
   onCheckHistory: () => void
@@ -1273,7 +1294,7 @@ export default function AttendancePage({
               onClick={onBack}
               aria-label="Back to Login"
             >
-              <AttendanceIcon name="back" />
+              <BackIcon />
             </button>
           </nav>
           <h1>Sign In / Sign Out(Sep 24)</h1>
@@ -1871,13 +1892,16 @@ export default function AttendancePage({
             nric: profileStaff.nric,
           }}
           onClose={() => setProfileFor(null)}
-          onWriteReview={() => {
+          onWriteReview={(target) => {
             setProfileFor(null)
-            onWriteReview({
-              id: profileStaff.id,
-              name: profileStaff.name.replace("\n", " "),
-              nric: profileStaff.nric.replace(/\s/g, ""),
-            })
+            onWriteReview(
+              {
+                id: profileStaff.id,
+                name: profileStaff.name.replace("\n", " "),
+                nric: profileStaff.nric.replace(/\s/g, ""),
+              },
+              target,
+            )
           }}
         />
       )}

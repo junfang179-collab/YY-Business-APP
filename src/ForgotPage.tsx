@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type ReactNode } from "react"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
-  ArrowLeft02Icon,
   CheckmarkCircle02Icon,
   Mail01Icon,
   SquareLock02Icon,
   ViewIcon,
   ViewOffIcon,
 } from "@hugeicons/core-free-icons"
+import BackIcon from "./BackIcon"
 import "./forgot.css"
 
 function Field({
@@ -111,7 +111,7 @@ export default function ForgotPage({ onBack }: { onBack: () => void }) {
     <main className="sign-in-page signup-page ipad-app">
       <div className="landscape" aria-hidden="true" />
       <button className="signup-back" onClick={goBack} aria-label="Back">
-        <HugeiconsIcon icon={ArrowLeft02Icon} size={26} strokeWidth={2} color="currentColor" />
+        <BackIcon />
       </button>
 
       <section className="signup-card forgot-card" aria-labelledby="forgot-heading">

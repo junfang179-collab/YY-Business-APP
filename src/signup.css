@@ -1,5 +1,6 @@
 /* Sign Up page — same glass / light-blue language as the login card. */
 
+/* 返回按钮：和全項目统一 —— 纯白圆 + 蓝色折角箭头，无描边，只有淡投影 */
 .signup-back {
   position: absolute;
   z-index: 2;
@@ -7,17 +8,18 @@
   left: calc(52 * var(--u));
   display: grid;
   place-items: center;
-  width: calc(58 * var(--u));
-  height: calc(58 * var(--u));
-  border: 1px solid #ffffffa8;
+  width: calc(66 * var(--u));
+  height: calc(66 * var(--u));
+  border: 0;
   border-radius: 50%;
-  background: #ffffff4d;
-  color: #2f5c92;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 calc(6 * var(--u)) calc(18 * var(--u)) #3d77ae1f;
+  background: #fff;
+  box-shadow: 0 calc(4 * var(--u)) calc(14 * var(--u)) #33527a26;
   transition: background .18s, transform .18s;
 }
-.signup-back:hover { background: #ffffff80; }
+.signup-back svg { width: calc(30 * var(--u)); height: calc(30 * var(--u)); }
+/* index.css 里 `.sign-in-page button { box-shadow: none }` 会吃掉投影，这里按更具体的选择器补回来 */
+.sign-in-page .signup-back { box-shadow: 0 calc(4 * var(--u)) calc(14 * var(--u)) #33527a26; }
+.signup-back:hover { background: #f5faff; }
 .signup-back:active { transform: scale(.96); }
 
 .signup-card {
@@ -237,7 +239,8 @@
 @media (max-width: 600px) {
   .signup-card { width: 100%; max-width: 470px; padding: 26px 20px 22px; border-radius: 24px; }
   .signup-grid { grid-template-columns: 1fr; gap: 10px; }
-  .signup-back { top: 22px; left: 20px; width: 42px; height: 42px; }
+  .signup-back { top: 22px; left: 20px; width: 44px; height: 44px; }
+  .signup-back svg { width: 20px; height: 20px; }
   .signup-heading h1 { font-size: 32px; line-height: 42px; letter-spacing: -.7px; }
   .signup-heading p { font-size: 14px; }
   .signup-field { height: 54px; padding: 0 14px; border-radius: 15px; gap: 12px; }

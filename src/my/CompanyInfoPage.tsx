@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { SelectMenu } from "./SelectMenu"
+import BackIcon from "../BackIcon"
 import "../employer.css"
 import "../company-info.css"
 
@@ -89,9 +90,7 @@ export default function CompanyInfoPage({ onBack }: { onBack: () => void }) {
 
       <header className="notice-header">
         <button type="button" className="notice-back" aria-label="Back" onClick={onBack}>
-          <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m27 9-13 14 13 14" />
-          </svg>
+          <BackIcon />
         </button>
         <h1>Company Information</h1>
         <span />

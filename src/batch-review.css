@@ -24,23 +24,34 @@
 .batch-rate:hover { filter: brightness(1.03); }
 .batch-empty { padding: 28px; text-align: center; color: #7e93ac; font-size: 17px; }
 
-/* ---- Per-staff rating dialog ---- */
-.batch-dialog { width: min(720px, calc(100vw - 40px)); margin: auto; padding: 0; border: 1px solid #ffffffde; border-radius: 24px; background: linear-gradient(160deg, #f3f9ff, #dfeefc); color: #142b50; box-shadow: 0 30px 90px #16365a3d; }
-.batch-dialog:focus { outline: none; }
-.batch-dialog::backdrop { background: #1939594d; backdrop-filter: blur(6px); }
-.batch-dialog-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 14px 20px; border-bottom: 1px solid #ffffffb8; background: linear-gradient(180deg, #d9ebfdd9, #eaf4ff8f); }
-.batch-dialog-head strong { font-size: max(calc(21 * var(--w)), 19px); font-weight: 700; text-align: center; }
-.batch-dialog-head button { justify-self: start; min-height: 44px; padding: 0 6px; background: transparent; color: #5b7695; font-size: max(calc(18 * var(--w)), 17px); font-weight: 600; }
-.batch-dialog-head button.is-primary { justify-self: end; color: #078aff; }
-.batch-dialog-body { padding: 20px 22px 22px; }
-.batch-dialog-row { display: grid; grid-template-columns: max(calc(150 * var(--w)), 132px) 1fr; align-items: center; gap: 12px; padding: 5px 0; }
-.batch-dialog-row > span { color: #526780; font-size: max(calc(18 * var(--w)), 17px); }
-.batch-dialog-row [role="radiogroup"] { display: flex; gap: 4px; }
-.batch-dialog-row [role="radiogroup"] button { width: 44px; height: 44px; padding: 0; background: transparent; color: #c5d4e2; font-size: max(calc(26 * var(--w)), 24px); line-height: 1; }
+/* ---- Per-staff rating dialog ----
+   視覺照香港評分彈窗：外層漸層卡 + 內層白卡 + 藍色膠囊主按鈕；
+   遮罩用真實元素（::backdrop 在 Figma 抓取時會整個消失）。 */
+.batch-dialog-layer { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 20px; }
+.batch-dialog-scrim { position: absolute; inset: 0; padding: 0; border: 0; border-radius: 0; background: #1939594d; backdrop-filter: blur(5px); cursor: default; }
+.batch-dialog { position: relative; width: min(760px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; padding: calc(26 * var(--w)) calc(30 * var(--w)) calc(30 * var(--w)); border: 1px solid #ffffffde; border-radius: calc(26 * var(--w)); background: linear-gradient(165deg, #f7fbff, #e2effd); box-shadow: 0 40px 120px #16365a54; color: #142b50; }
+
+.batch-dialog-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: calc(16 * var(--w)); margin-bottom: calc(20 * var(--w)); }
+.batch-dialog-head strong { color: #142b50; font-size: max(calc(25 * var(--w)), 19px); font-weight: 600; text-align: center; }
+/* 關閉按鈕：與全項目彈窗（.attendance-dialog-close）完全一致的淺藍圓 + 深藍叉 */
+.batch-dialog .batch-dialog-close { justify-self: start; display: grid; place-items: center; width: 44px; height: 44px; padding: 10px; border-radius: 50%; background: #e0edfc; color: #142b50; cursor: pointer; transition: background .15s ease; }
+.batch-dialog .batch-dialog-close:hover { background: #d7e7fa; }
+.batch-dialog-close svg { width: 24px; height: 24px; }
+.batch-dialog-save { justify-self: end; min-width: calc(148 * var(--w)); min-height: 48px; padding: 0 calc(26 * var(--w)); border-radius: 999px; background: #078aff; color: #fff; font-family: inherit; font-size: max(calc(19 * var(--w)), 16px); font-weight: 600; cursor: pointer; transition: background .15s ease; }
+.batch-dialog-save:hover { background: #007be6; }
+
+.batch-dialog-body { padding: calc(22 * var(--w)) calc(24 * var(--w)) calc(24 * var(--w)); border-radius: calc(20 * var(--w)); background: #fdfeff; }
+.batch-dialog-row { display: grid; grid-template-columns: minmax(calc(124 * var(--w)), auto) minmax(0, 1fr); align-items: center; gap: calc(24 * var(--w)); padding: calc(4 * var(--w)) 0; }
+.batch-dialog-row > span { color: #526780; font-size: max(calc(19 * var(--w)), 17px); }
+.batch-dialog-row [role="radiogroup"] { display: flex; gap: calc(4 * var(--w)); }
+.batch-dialog-row [role="radiogroup"] button { width: calc(46 * var(--w)); min-width: 36px; height: calc(46 * var(--w)); min-height: 36px; padding: 0; background: transparent; color: #c5d4e2; font-size: max(calc(28 * var(--w)), 22px); line-height: 1; cursor: pointer; }
 .batch-dialog-row [role="radiogroup"] button.selected { color: #f5a623; }
-.batch-dialog-feedback { display: grid; gap: 8px; margin-top: 14px; color: #526780; font-size: max(calc(18 * var(--w)), 17px); font-weight: 700; }
-.batch-dialog-feedback textarea { min-height: 118px; padding: 14px 16px; border: 0; border-radius: 14px; background: #dceeff; color: #17365b; font-family: inherit; font-size: max(calc(18 * var(--w)), 17px); line-height: 1.5; resize: none; }
-.batch-dialog-feedback textarea:focus { outline: 2px solid #8ecbff; outline-offset: 2px; }
+
+.batch-dialog-feedback { display: block; margin-top: calc(20 * var(--w)); }
+.batch-dialog-feedback > span { display: block; margin-bottom: calc(10 * var(--w)); color: #1689eb; font-size: max(calc(18 * var(--w)), 16px); font-weight: 700; }
+.batch-dialog-feedback textarea { width: 100%; min-height: calc(130 * var(--w)); padding: calc(16 * var(--w)) calc(18 * var(--w)); border: 0; border-radius: calc(16 * var(--w)); background: #f2f8fe; box-shadow: inset 0 0 0 1px #e2eefa; color: #17365b; font-family: inherit; font-size: max(calc(18 * var(--w)), 16px); line-height: 1.5; resize: vertical; }
+.batch-dialog-feedback textarea:focus { outline: none; box-shadow: inset 0 0 0 1px #8ecbff; background: #fff; }
+.batch-dialog-feedback textarea::placeholder { color: #9fb3c9; }
 
 @media (max-width: 600px) {
   .batch-review-page .write-review-content { margin-top: 22px; }

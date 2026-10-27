@@ -6,28 +6,28 @@ import {
   type ReactNode,
 } from "react"
 import IpadPreview from "./IpadPreview"
-/* 两套完全独立的页面：新加坡（默认）与马来西亚。
-   App 根据 URL 上的 ?region=my 选择渲染哪一套，hash 路由两者完全一致。 */
+/* 各地区完全独立的页面：新加坡（默认）、马来西亚、香港。
+   App 根据 URL 上的 ?region=my / ?region=hk 选择渲染哪一套，hash 路由三者完全一致。 */
 import * as Sg from "./pages-sg"
 import * as My from "./my"
+import * as Hk from "./hk"
 import type { HistorySheet } from "./HistoryDetailPage"
 import type { ClothingRequestInfo } from "./StaffClothingSizePage"
 import FigmaCopyBridge from "./FigmaCopyBridge"
 
-/** 业务地区。页面按地区分成两套独立文件，避免改一边影响另一边。 */
-type Region = "sg" | "my"
+/** 业务地区。页面按地区分成多套独立文件，避免改一边影响另一边。 */
+type Region = "sg" | "my" | "hk"
 
 function readRegion(): Region {
-  return new URLSearchParams(window.location.search).get("region") === "my"
-    ? "my"
-    : "sg"
+  const value = new URLSearchParams(window.location.search).get("region")
+  return value === "my" || value === "hk" ? value : "sg"
 }
 
 /** 切换地区只改 query，不动 hash，所以当前所在页面保持不变。 */
 function writeRegion(region: Region) {
   const url = new URL(window.location.href)
-  if (region === "my") url.searchParams.set("region", "my")
-  else url.searchParams.delete("region")
+  if (region === "sg") url.searchParams.delete("region")
+  else url.searchParams.set("region", region)
   window.history.replaceState(null, "", url)
 }
 
@@ -82,17 +82,20 @@ function Icon({ name }: { name: IconName }) {
 }
 
 /* 区域选择：圆形国旗 + 名称。香港按中国香港表述。
-   `region` 决定登录后走哪一套页面（sg / my 各有一套独立文件）。 */
+   `region` 决定登录后走哪一套页面（sg / my / hk 各有一套独立文件）。 */
 const regions: {
   code: string
   region: Region
   name: string
+  /** 香港繁体界面下的地区名称 */
+  nameHk: string
   flag: ReactNode
 }[] = [
   {
     code: "SG",
     region: "sg",
     name: "Singapore",
+    nameHk: "新加坡",
     flag: (
       <>
         <rect x="0" y="0" width="24" height="12" fill="#ed2939" />
@@ -106,6 +109,7 @@ const regions: {
     code: "MY",
     region: "my",
     name: "Malaysia",
+    nameHk: "馬來西亞",
     flag: (
       <>
         {[0, 1, 2, 3, 4, 5, 6, 7].map((row) => (
@@ -124,11 +128,11 @@ const regions: {
       </>
     ),
   },
-  /* 除新加坡、马来西亚以外的地区先隐藏；需要恢复时删掉这段注释的两个标记即可
-     （同时记得给每项补上 region 字段，否则会按新加坡处理）。
   {
     code: "HK",
+    region: "hk",
     name: "Hong Kong, China",
+    nameHk: "中國香港",
     flag: (
       <>
         <rect x="0" y="0" width="24" height="24" fill="#de2910" />
@@ -148,6 +152,8 @@ const regions: {
       </>
     ),
   },
+  /* 除新加坡、马来西亚、香港以外的地区先隐藏；需要恢复时删掉这段注释的两个标记即可
+     （同时记得给每项补上 region 字段，否则会按新加坡处理）。
   {
     code: "TH",
     name: "Thailand",
@@ -221,6 +227,9 @@ function LocationNavigation({
   const [open, setOpen] = useState(false)
   const navigation = useRef<HTMLElement>(null)
   const current = regions.find((item) => item.region === region) ?? regions[0]
+  /* 香港繁体界面下，地区名（含下拉里的其它国家）一并走繁体 */
+  const label = (item: (typeof regions)[number]) =>
+    region === "hk" ? item.nameHk : item.name
 
   useEffect(() => {
     function dismiss(event: PointerEvent) {
@@ -233,7 +242,7 @@ function LocationNavigation({
   return (
     <nav
       className="location-navigation"
-      aria-label="Region"
+      aria-label={region === "hk" ? "地區" : "Region"}
       ref={navigation}
       onKeyDown={(event) => {
         if (event.key === "Escape") setOpen(false)
@@ -246,14 +255,14 @@ function LocationNavigation({
         aria-controls="location-options"
       >
         <RegionFlag code={current.code}>{current.flag}</RegionFlag>
-        {current.name}
+        {label(current)}
         <Icon name="chevron" />
       </button>
       {open && (
         <div
           className="location-options"
           id="location-options"
-          aria-label="Choose your region"
+          aria-label={region === "hk" ? "選擇地區" : "Choose your region"}
         >
           {regions.map((item) => (
             <button
@@ -266,7 +275,7 @@ function LocationNavigation({
             >
               <span className="location-option-main">
                 <RegionFlag code={item.code}>{item.flag}</RegionFlag>
-                <span>{item.name}</span>
+                <span>{label(item)}</span>
               </span>
               {region === item.region && <Icon name="check" />}
             </button>
@@ -310,20 +319,31 @@ function Checkbox({
 
 function Dialog({
   modal,
+  region,
   onClose,
 }: {
   modal: Exclude<ModalName, null>
+  region: Region
   onClose: () => void
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [submitted, setSubmitted] = useState(false)
-  const titles = {
-    forgot: "Forgot Password",
-    signup: "Create your account",
-    terms: "Terms & Conditions",
-    privacy: "Privacy Policy",
-    login: "Sign-in help",
-  }
+  const hk = region === "hk"
+  const titles = hk
+    ? {
+        forgot: "忘記密碼",
+        signup: "建立你的帳戶",
+        terms: "條款及細則",
+        privacy: "私隱政策",
+        login: "登入協助",
+      }
+    : {
+        forgot: "Forgot Password",
+        signup: "Create your account",
+        terms: "Terms & Conditions",
+        privacy: "Privacy Policy",
+        login: "Sign-in help",
+      }
 
   useEffect(() => {
     dialog.current?.showModal()
@@ -348,7 +368,7 @@ function Dialog({
         <button
           className="dialog-close"
           onClick={onClose}
-          aria-label="Close dialog"
+          aria-label={hk ? "關閉" : "Close dialog"}
         >
           <Icon name="close" />
         </button>
@@ -361,41 +381,53 @@ function Dialog({
               </span>
               <h3>
                 {modal === "forgot"
-                  ? "Reset link sent"
-                  : "Welcome to Hong Ye Group"}
+                  ? hk
+                    ? "重設連結已發送"
+                    : "Reset link sent"
+                  : hk
+                    ? "歡迎加入 Hong Ye Group"
+                    : "Welcome to Hong Ye Group"}
               </h3>
               <p>
                 {modal === "forgot"
-                  ? "Check your inbox and follow the link to set a new password."
-                  : "Your company account is ready. Sign in to start managing your team."}
+                  ? hk
+                    ? "請查看你的電郵，並按連結設定新密碼。"
+                    : "Check your inbox and follow the link to set a new password."
+                  : hk
+                    ? "你的公司帳戶已建立，登入即可開始管理團隊。"
+                    : "Your company account is ready. Sign in to start managing your team."}
               </p>
               <button
                 className="primary-button dialog-action"
                 onClick={onClose}
               >
-                Back to Login
+                {hk ? "返回登入" : "Back to Login"}
               </button>
             </div>
           ) : (
             <form className="dialog-form" onSubmit={submit}>
               <p>
                 {modal === "forgot"
-                  ? "Enter your account email and we will send you a reset link."
-                  : "Join Hong Ye Group. Enter your details to create your company account."}
+                  ? hk
+                    ? "輸入你的帳戶電郵，我們會發送重設連結給你。"
+                    : "Enter your account email and we will send you a reset link."
+                  : hk
+                    ? "加入 Hong Ye Group，填寫資料即可建立你的公司帳戶。"
+                    : "Join Hong Ye Group. Enter your details to create your company account."}
               </p>
               {modal === "signup" && (
                 <label>
-                  Full name
+                  {hk ? "姓名" : "Full name"}
                   <input
                     name="name"
                     autoComplete="name"
-                    placeholder="Your full name"
+                    placeholder={hk ? "你的姓名" : "Your full name"}
                     required
                   />
                 </label>
               )}
               <label>
-                Email address
+                {hk ? "電郵地址" : "Email address"}
                 <input
                   name="email"
                   type="email"
@@ -406,19 +438,25 @@ function Dialog({
               </label>
               {modal === "signup" && (
                 <label>
-                  Password
+                  {hk ? "密碼" : "Password"}
                   <input
                     name="password"
                     type="password"
                     autoComplete="new-password"
                     minLength={8}
-                    placeholder="At least 8 characters"
+                    placeholder={hk ? "至少 8 個字元" : "At least 8 characters"}
                     required
                   />
                 </label>
               )}
               <button type="submit" className="primary-button dialog-action">
-                {modal === "forgot" ? "Send reset link" : "Create account"}
+                {modal === "forgot"
+                  ? hk
+                    ? "發送重設連結"
+                    : "Send reset link"
+                  : hk
+                    ? "建立帳戶"
+                    : "Create account"}
               </button>
             </form>
           )
@@ -426,13 +464,19 @@ function Dialog({
           <>
             <p>
               {modal === "login"
-                ? "Sign in with the company email and password issued to you. Contact your administrator if you do not have an account yet."
+                ? hk
+                  ? "請使用公司分配給你的電郵與密碼登入。如仍未有帳戶，請聯絡你的管理員。"
+                  : "Sign in with the company email and password issued to you. Contact your administrator if you do not have an account yet."
                 : modal === "terms"
-                  ? "Accounts are for authorised Hong Ye Group staff only. Keep your credentials private and use the attendance tools for work purposes."
-                  : "Hong Ye Group collects only the staff details needed to manage attendance and payroll. Contact your administrator to review or update your information."}
+                  ? hk
+                    ? "帳戶只供 Hong Ye Group 授權員工使用。請妥善保管登入資料，並僅將考勤工具用於工作用途。"
+                    : "Accounts are for authorised Hong Ye Group staff only. Keep your credentials private and use the attendance tools for work purposes."
+                  : hk
+                    ? "Hong Ye Group 只會收集管理考勤與薪酬所需的員工資料。如需查閱或更新你的資料，請聯絡管理員。"
+                    : "Hong Ye Group collects only the staff details needed to manage attendance and payroll. Contact your administrator to review or update your information."}
             </p>
             <button className="primary-button dialog-action" onClick={onClose}>
-              Back to Login
+              {hk ? "返回登入" : "Back to Login"}
             </button>
           </>
         )}
@@ -441,18 +485,65 @@ function Dialog({
   )
 }
 
+/* 登录页文案：香港地区走繁体，其余地区保持英文（设计稿原文） */
+const loginCopy = {
+  en: {
+    heading: "Welcome Back",
+    sub: "Sign in to your Hong Ye Group account",
+    emailLabel: "Email or username",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Enter your password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    login: "Login",
+    remember: "Remember Password",
+    forgot: "Forgot Password",
+    signup: "Don't have account? Sign up Now",
+    agreeAria: "Agree to Terms & Conditions and Privacy Policy",
+    agreeLead: "By signing in, you agree to Hong Ye Group's",
+    terms: "Terms & Conditions",
+    and: "and",
+    privacy: "Privacy Policy",
+    mustAgree: "Please agree to the Terms & Conditions and Privacy Policy.",
+  },
+  hk: {
+    heading: "歡迎回來",
+    sub: "登入你的 Hong Ye Group 帳戶",
+    emailLabel: "電郵或帳戶名稱",
+    passwordLabel: "密碼",
+    passwordPlaceholder: "請輸入密碼",
+    showPassword: "顯示密碼",
+    hidePassword: "隱藏密碼",
+    login: "登入",
+    remember: "記住密碼",
+    forgot: "忘記密碼",
+    signup: "還沒有帳戶？立即註冊",
+    agreeAria: "同意條款及細則與私隱政策",
+    agreeLead: "登入即表示你同意 Hong Ye Group 的",
+    terms: "條款及細則",
+    and: "及",
+    privacy: "私隱政策",
+    mustAgree: "請先同意條款及細則與私隱政策。",
+  },
+}
+
 function LoginCard({
+  region,
   onOpen,
   onLogin,
   onSignup,
   onForgot,
 }: {
+  region: Region
   onOpen: (modal: ModalName) => void
   onLogin: () => void
   onSignup: () => void
   onForgot: () => void
 }) {
-  const [username, setUsername] = useState("hongyehongyegroup.com.sg")
+  const copy = region === "hk" ? loginCopy.hk : loginCopy.en
+  const [username, setUsername] = useState(
+    region === "hk" ? "hongyehongyegroup.com.hk" : "hongyehongyegroup.com.sg",
+  )
   const [password, setPassword] = useState("")
   const [visible, setVisible] = useState(false)
   const [remember, setRemember] = useState(false)
@@ -462,7 +553,7 @@ function LoginCard({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!agreed) {
-      setError("Please agree to the Terms & Conditions and Privacy Policy.")
+      setError(copy.mustAgree)
       return
     }
     setError("")
@@ -472,15 +563,15 @@ function LoginCard({
   return (
     <section className="login-card" aria-labelledby="welcome-heading">
       <header className="card-heading">
-        <h1 id="welcome-heading">Welcome Back</h1>
-        <p>Sign in to your Hong Ye Group account</p>
+        <h1 id="welcome-heading">{copy.heading}</h1>
+        <p>{copy.sub}</p>
       </header>
       <form className="login-form" onSubmit={submit}>
         <div className="credentials">
           <label className="input-field">
             <Icon name="mail" />
             <input
-              aria-label="Email or username"
+              aria-label={copy.emailLabel}
               name="username"
               autoComplete="username"
               spellCheck={false}
@@ -492,11 +583,11 @@ function LoginCard({
           <label className="input-field password-field">
             <Icon name="lock" />
             <input
-              aria-label="Password"
+              aria-label={copy.passwordLabel}
               name="password"
               type={visible ? "text" : "password"}
               autoComplete="current-password"
-              placeholder="Enter your password"
+              placeholder={copy.passwordPlaceholder}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -504,7 +595,7 @@ function LoginCard({
               className="password-toggle"
               type="button"
               onClick={() => setVisible(!visible)}
-              aria-label={visible ? "Hide password" : "Show password"}
+              aria-label={visible ? copy.hidePassword : copy.showPassword}
               aria-pressed={visible}
             >
               <Icon name={visible ? "eye-off" : "eye"} />
@@ -512,18 +603,18 @@ function LoginCard({
           </label>
         </div>
         <button className="primary-button login-button" type="submit">
-          Login
+          {copy.login}
         </button>
         <div className="account-options">
           <Checkbox checked={remember} onChange={setRemember}>
-            Remember Password
+            {copy.remember}
           </Checkbox>
           <button
             className="text-link"
             type="button"
             onClick={() => onForgot()}
           >
-            Forgot Password
+            {copy.forgot}
           </button>
         </div>
         <button
@@ -531,7 +622,7 @@ function LoginCard({
           type="button"
           onClick={() => onSignup()}
         >
-          Don't have account? Sign up Now
+          {copy.signup}
         </button>
         <div className="agreement">
           <Checkbox
@@ -541,25 +632,25 @@ function LoginCard({
               setError("")
             }}
             className="agreement-checkbox"
-            ariaLabel="Agree to Terms & Conditions and Privacy Policy"
+            ariaLabel={copy.agreeAria}
           />
           <p>
-            By signing in, you agree to Hong Ye Group's
+            {copy.agreeLead}
             <br className="desktop-break" />{" "}
             <button
               type="button"
               className="text-link"
               onClick={() => onOpen("terms")}
             >
-              Terms &amp; Conditions
+              {copy.terms}
             </button>{" "}
-            and{" "}
+            {copy.and}{" "}
             <button
               type="button"
               className="text-link"
               onClick={() => onOpen("privacy")}
             >
-              Privacy Policy
+              {copy.privacy}
             </button>
           </p>
         </div>
@@ -581,7 +672,7 @@ function AppRoutes({
   onRegionChange: (next: Region) => void
 }) {
   /* 当前地区对应的页面集合。两套导出结构完全一致，只是文件各自独立 */
-  const R: typeof Sg = region === "my" ? My : Sg
+  const R: typeof Sg = region === "my" ? My : region === "hk" ? Hk : Sg
   const [modal, setModal] = useState<ModalName>(null)
   const [page, setPage] = useState(window.location.hash)
   const [reviewStaff, setReviewStaff] = useState({ id: 1, name: "Tina Fang", nric: "S5486 1256" })
@@ -616,28 +707,88 @@ function AppRoutes({
 
   if (!isIpadViewport) return <IpadPreview />
 
-  if (page === "#attendance") {
+  /* 考勤页三个地区共用同一份；`billing` 决定列头是 Break Hours 还是 Room。
+     香港只做「按小時」计费，付款方式页已下线，所以固定传 hour。 */
+  const attendanceView = (
+    <R.AttendancePage
+      onBack={() => {
+        window.location.hash = "employer"
+      }}
+      onWriteReview={(staff, target) => {
+        setReviewStaff(staff)
+        setReviewFrom("attendance")
+        /* 人物卡点 Reviews 先落在该员工的 Staff Reviews 页 */
+        window.location.hash = target ?? "write-review"
+      }}
+      onBatchReview={(staff) => {
+        setReviewStaffList(staff)
+        window.location.hash = "batch-review"
+      }}
+      onCheckHistory={() => {
+        /* 提交成功后的 Check History → 直接进 History 列表 */
+        window.location.hash = "history"
+      }}
+      askSubmit={askSubmit}
+      onSubmitHandled={() => setAskSubmit(false)}
+      billing={region === "hk" ? "hour" : billingMode}
+    />
+  )
+
+  if (page === "#attendance") return attendanceView
+  /* 香港没有付款方式页：旧链接进来也直接落在「按小時」的考勤页 */
+  if (page === "#billing-method" && region === "hk") return attendanceView
+  /* 香港：签到二维码整页（考勤页右上「二維碼」进入） */
+  if (page === "#qr-code" && region === "hk") {
     return (
-      <R.AttendancePage
+      <Hk.QrCodePage
         onBack={() => {
-          window.location.hash = "employer"
+          window.location.hash = "attendance"
         }}
-        onWriteReview={(staff) => {
-          setReviewStaff(staff)
-          setReviewFrom("attendance")
-          window.location.hash = "write-review"
+      />
+    )
+  }
+  /* 香港：批量編輯工作（簽到 / 簽退 的批量編輯欄 与 電子考勤列表 標題右側
+     的「編輯工作」进入，返回按进来时的来源原路回去） */
+  if (page === "#edit-job" && region === "hk") {
+    return (
+      <Hk.EditJobPage
+        onBack={() => {
+          window.location.hash = Hk.takeEditJobOrigin()
         }}
-        onBatchReview={(staff) => {
-          setReviewStaffList(staff)
-          window.location.hash = "batch-review"
+      />
+    )
+  }
+
+  /* 香港：添加新員工整页（簽到 / 簽退 与 電子考勤列表 的「加人」进入，
+     返回按进来时的来源原路回去） */
+  if (page === "#add-staff" && region === "hk") {
+    return (
+      <Hk.AddStaffPage
+        onBack={() => {
+          window.location.hash = Hk.takeAddStaffOrigin()
         }}
-        onCheckHistory={() => {
-          /* 提交成功后的 Check History → 直接进 History 列表 */
-          window.location.hash = "history"
+      />
+    )
+  }
+
+  /* 香港：门卫打卡整页（部门主页的「門衛打卡」卡片进入） */
+  if (page === "#gate-checkin" && region === "hk") {
+    return (
+      <Hk.GateCheckinPage
+        onBack={() => {
+          window.location.hash = "department-home"
         }}
-        askSubmit={askSubmit}
-        onSubmitHandled={() => setAskSubmit(false)}
-        billing={billingMode}
+      />
+    )
+  }
+
+  /* 香港：日誌整页（考勤页 / 電子考勤明細页点日誌图标进入，返回原来那一页） */
+  if (page === "#log" && region === "hk") {
+    return (
+      <Hk.LogPage
+        onBack={() => {
+          window.location.hash = Hk.takeLogOrigin()
+        }}
       />
     )
   }
@@ -647,17 +798,33 @@ function AppRoutes({
       <R.ReviewPage
         staff={reviewStaff}
         onBack={() => {
-          window.location.hash = "attendance"
+          /* 从哪张考勤表 / 明细进的人物卡，返回就回哪一页 */
+          window.location.hash = reviewFrom
         }}
         onWrite={() => {
           window.location.hash = "write-review"
+        }}
+        onWorkRecord={() => {
+          window.location.hash = "work-record"
+        }}
+      />
+    )
+  }
+
+  /* 員工的工作記錄（Staff Reviews 右上「Work Record」进入，返回那一页） */
+  if (page === "#work-record") {
+    return (
+      <R.WorkRecordPage
+        staff={reviewStaff}
+        onBack={() => {
+          window.location.hash = "reviews"
         }}
       />
     )
   }
 
   if (page === "#write-review") {
-    return <R.WriteReviewPage staff={reviewStaff} onBack={() => { window.location.hash = reviewFrom }} onSubmit={() => { window.location.hash = "reviews" }} onSkip={() => { window.location.hash = reviewFrom }} />
+    return <R.WriteReviewPage staff={reviewStaff} onBack={() => { window.location.hash = "reviews" }} onSubmit={() => { window.location.hash = "reviews" }} onSkip={() => { window.location.hash = reviewFrom }} />
   }
 
   if (page === "#batch-review") {
@@ -685,10 +852,10 @@ function AppRoutes({
         onBack={() => {
           window.location.hash = "e-attendance-list"
         }}
-        onWriteReview={(staff) => {
+        onWriteReview={(staff, target) => {
           setReviewStaff(staff)
           setReviewFrom("e-attendance-detail")
-          window.location.hash = "write-review"
+          window.location.hash = target ?? "write-review"
         }}
       />
     )
@@ -727,10 +894,10 @@ function AppRoutes({
           setHistoryRevisedIso(iso)
           window.location.hash = "history"
         }}
-        onWriteReview={(staff) => {
+        onWriteReview={(staff, target) => {
           setReviewStaff(staff)
           setReviewFrom("history-detail")
-          window.location.hash = "write-review"
+          window.location.hash = target ?? "write-review"
         }}
       />
     )
@@ -858,6 +1025,17 @@ function AppRoutes({
     )
   }
 
+  if (page === "#redeem") {
+    return (
+      <R.RedeemPage
+        onBack={() => {
+          /* 回部門主頁而不是回掃描頁：掃描頁 3 秒後會再自動進來，會變成死循環 */
+          window.location.hash = "department-home"
+        }}
+      />
+    )
+  }
+
   if (page === "#notifications") {
     return (
       <R.NotificationPage
@@ -875,6 +1053,12 @@ function AppRoutes({
           window.location.hash = "department-home"
         }}
         onBillingMethod={() => {
+          /* 香港只保留「按小時」计费：不经过付款方式页，直接进考勤 */
+          if (region === "hk") {
+            setBillingMode("hour")
+            window.location.hash = "attendance"
+            return
+          }
           window.location.hash = "billing-method"
         }}
         onAttendanceList={() => {
@@ -935,6 +1119,7 @@ function AppRoutes({
       <div className="landscape" aria-hidden="true" />
       <LocationNavigation region={region} onRegionChange={onRegionChange} />
       <LoginCard
+        region={region}
         onOpen={setModal}
         onLogin={() => {
           window.location.hash = "department-home"
@@ -947,7 +1132,7 @@ function AppRoutes({
         }}
       />
       {modal && (
-        <Dialog key={modal} modal={modal} onClose={() => setModal(null)} />
+        <Dialog key={modal} modal={modal} region={region} onClose={() => setModal(null)} />
       )}
     </main>
   )
@@ -963,11 +1148,15 @@ export default function App() {
   /* 地区由 URL 决定，刷新或分享链接后仍是同一个地区的页面 */
   const [region, setRegion] = useState<Region>(readRegion)
 
-  /* 给 <html> 打标记：马来西亚的差异样式统一写成 html.region-my xxx，
+  /* 给 <html> 打标记：各地区的差异样式统一写成 html.region-my / html.region-hk xxx，
      不写这一层的一律沿用新加坡的样式 */
   useEffect(() => {
     document.documentElement.classList.toggle("region-my", region === "my")
-    return () => document.documentElement.classList.remove("region-my")
+    document.documentElement.classList.toggle("region-hk", region === "hk")
+    return () => {
+      document.documentElement.classList.remove("region-my")
+      document.documentElement.classList.remove("region-hk")
+    }
   }, [region])
 
   useEffect(() => {

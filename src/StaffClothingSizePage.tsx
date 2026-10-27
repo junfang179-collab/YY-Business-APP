@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
+import BackIcon from "./BackIcon"
 import "./attendance.css"
 import "./e-attendance.css"
 import "./staff-clothing.css"
@@ -73,12 +73,7 @@ export default function StaffClothingSizePage({
               onClick={onBack}
               aria-label="Back to Staff Clothing"
             >
-              <HugeiconsIcon
-                icon={ArrowLeft02Icon}
-                size={26}
-                strokeWidth={2}
-                color="currentColor"
-              />
+              <BackIcon />
             </button>
           </nav>
           <h1>Staff Clothing Size {stamp}</h1>
@@ -109,7 +104,7 @@ export default function StaffClothingSizePage({
           <div className="sc-size-head" aria-hidden="true">
             <span>#</span>
             <span>Name</span>
-            <span>ID No</span>
+            <span>NRIC</span>
             <span>Gender</span>
             <span>Clothing size</span>
           </div>

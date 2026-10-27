@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
   ArrowDown01Icon,
-  ArrowLeft02Icon,
   Building02Icon,
   CheckmarkCircle02Icon,
   Mail01Icon,
@@ -12,6 +11,7 @@ import {
   ViewIcon,
   ViewOffIcon,
 } from "@hugeicons/core-free-icons"
+import BackIcon from "./BackIcon"
 import "./signup.css"
 
 /* 业务目前只服务新加坡，区号只保留 +65；其余先注释掉，需要时放开即可 */
@@ -126,7 +126,7 @@ export default function SignUpPage({
     <main className="sign-in-page signup-page ipad-app">
       <div className="landscape" aria-hidden="true" />
       <button className="signup-back" onClick={onBack} aria-label="Back to login">
-        <HugeiconsIcon icon={ArrowLeft02Icon} size={26} strokeWidth={2} color="currentColor" />
+        <BackIcon />
       </button>
 
       <section className="signup-card" aria-labelledby="signup-heading">

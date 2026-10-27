@@ -12,6 +12,7 @@ export function SelectMenu({
   options,
   onChange,
   className,
+  hidePlaceholder = false,
 }: {
   ariaLabel: string
   value: string
@@ -19,13 +20,16 @@ export function SelectMenu({
   options: string[]
   onChange: (value: string) => void
   className?: string
+  /** 菜单里不出现 placeholder 行（弹窗里只需要真正的可选项时用） */
+  hidePlaceholder?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   /* placeholder 有时本身就是合法选项（例如区号 +65）：
      这时候不再额外插一行清空项，否则菜单里会出现两个 +65 */
   const placeholderIsOption = options.includes(placeholder)
-  const rows = placeholderIsOption ? options : [placeholder, ...options]
+  const rows =
+    placeholderIsOption || hidePlaceholder ? options : [placeholder, ...options]
 
   useEffect(() => {
     if (!open) return

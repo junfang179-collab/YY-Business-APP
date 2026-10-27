@@ -1,0 +1,160 @@
+/* Redeem Goods 頁：外殼復用 .employer-page / .notice-header，
+   面板與按鈕沿用「客戶意見」那套純色白卡 + 純色藍主按鈕。
+   尺寸用 --e（1376 基準），文字用 --fs-* 令牌。 */
+.redeem-page { overflow: hidden; }
+
+.redeem-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #ffffffb8;
+  border-radius: calc(27 * var(--e));
+  background: #f8fbff;
+  box-shadow: inset 0 1px 3px #ffffff86, 0 calc(13 * var(--e)) calc(40 * var(--e)) #628dc613;
+}
+
+.redeem-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.redeem-list > li + li { border-top: 1px solid #e6f0fb; }
+
+.redeem-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(26 * var(--e));
+  width: 100%;
+  padding: calc(24 * var(--e)) calc(34 * var(--e));
+  background: transparent;
+  color: #142b50;
+  font-family: inherit;
+  text-align: left;
+  transition: background .16s;
+}
+.redeem-item:hover { background: #f1f8ff; }
+.redeem-item.is-on { background: #f3f9ff; }
+
+.redeem-thumb {
+  display: block;
+  width: calc(126 * var(--e));
+  height: calc(126 * var(--e));
+  overflow: hidden;
+  border: 1px solid #e7f1fb;
+  border-radius: calc(19 * var(--e));
+  background: #fff;
+}
+.redeem-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.redeem-copy { display: grid; gap: calc(9 * var(--e)); min-width: 0; }
+.redeem-copy strong {
+  overflow: hidden;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.redeem-window { color: #6e83a0; font-size: var(--fs-secondary); }
+.redeem-points { color: #46688c; font-size: var(--fs-secondary); }
+.redeem-points b {
+  margin-right: calc(4 * var(--e));
+  color: #078aff;
+  font-size: max(calc(28 * var(--e)), 20px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.redeem-tick {
+  display: grid;
+  place-items: center;
+  width: calc(46 * var(--e));
+  height: calc(46 * var(--e));
+  min-width: 26px;
+  min-height: 26px;
+  border: 2px solid #cfe2f4;
+  border-radius: 50%;
+  background: #fff;
+  transition: background .16s, border-color .16s;
+}
+.redeem-item.is-on .redeem-tick { border-color: #078aff; background: #078aff; }
+.redeem-tick svg { width: 64%; height: 64%; }
+
+.redeem-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(20 * var(--e));
+  padding: calc(20 * var(--e)) calc(34 * var(--e));
+  border-top: 1px solid #e6f0fb;
+  background: #fff;
+}
+
+.redeem-all {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(14 * var(--e));
+  padding: 0;
+  background: transparent;
+  color: #33475f;
+  font-family: inherit;
+  font-size: var(--fs-body);
+  white-space: nowrap;
+}
+.redeem-all-box {
+  display: grid;
+  place-items: center;
+  width: calc(38 * var(--e));
+  height: calc(38 * var(--e));
+  min-width: 24px;
+  min-height: 24px;
+  border: 2px solid #cfe2f4;
+  border-radius: 50%;
+  background: #fff;
+  transition: background .16s, border-color .16s;
+}
+.redeem-all-box.is-on { border-color: #078aff; background: #078aff; }
+.redeem-all-box svg { width: 64%; height: 64%; }
+
+.redeem-submit {
+  min-width: calc(300 * var(--e));
+  height: calc(76 * var(--e));
+  min-height: 48px;
+  padding: 0 calc(40 * var(--e));
+  border-radius: calc(20 * var(--e));
+  background: #078aff;
+  color: #fff;
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  letter-spacing: calc(.2 * var(--e));
+  transition: background .15s ease;
+}
+.redeem-submit:hover:not(:disabled) { background: #007be6; }
+.redeem-submit:disabled { background: #d3e2f3; color: #9cb1c8; cursor: default; }
+
+@media (max-width: 1000px) {
+  .redeem-page { --e: calc(100vw / 900); }
+  .redeem-thumb { width: 104px; height: 104px; border-radius: 16px; }
+  .redeem-item { gap: 16px; padding: 16px 20px; }
+  .redeem-foot { padding: 14px 20px; }
+  .redeem-submit { min-width: 180px; height: 52px; border-radius: 15px; }
+  .redeem-tick { width: 34px; height: 34px; }
+  .redeem-all-box { width: 28px; height: 28px; }
+}
+
+@media (max-width: 600px) {
+  .redeem-page { --e: 1px; padding: 24px 18px 30px; overflow: auto; }
+  .redeem-item { grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 14px; }
+  .redeem-thumb { width: 78px; height: 78px; border-radius: 13px; }
+  .redeem-copy { gap: 5px; }
+  .redeem-foot { padding: 12px 14px; gap: 10px; border-radius: 0 0 20px 20px; }
+  .redeem-submit { min-width: 120px; height: 46px; font-size: 16px; }
+  .redeem-all { font-size: 16px; }
+}

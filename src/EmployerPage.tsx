@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { SelectMenu } from "./SelectMenu"
+import BackIcon from "./BackIcon"
 import "./employer.css"
 
 type ModuleId = "requisition" | "attendance" | "list" | "history"
@@ -125,7 +126,7 @@ export default function EmployerPage({
           onClick={onBack}
           aria-label="Back to Department"
         >
-          <EmployerIcon name="back" />
+          <BackIcon />
         </button>
         <div>
           <p>Hong Ye Group</p>

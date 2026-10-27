@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowDown01Icon,
-  ArrowLeft02Icon,
   Cancel01Icon,
   CheckmarkCircle02Icon,
   PlusSignIcon,
@@ -12,6 +11,7 @@ import { AddStaffForm, AttendanceDialog } from "./AddStaffForm"
 import AttendanceCheck from "./AttendanceCheck"
 import { Caret, HoursSheet, SignatureSheet, TimeSheet } from "./AttendancePage"
 import { StaffProfileDialog } from "./StaffProfileDialog"
+import BackIcon from "../BackIcon"
 import "../e-attendance.css"
 
 /** 从 History 列表带过来的一张已提交单据 */
@@ -73,8 +73,11 @@ export default function HistoryDetailPage({
   onBack: () => void
   /** 经理签完名 → 带一条成功提示 + 这一天回 History 列表 */
   onSubmitted: (message: string, iso: string) => void
-  /** 人物卡里点 Reviews → 进单人评价页 */
-  onWriteReview: (staff: { id: number; name: string; nric: string }) => void
+  /** 人物卡里点 Reviews → 该员工 Staff Reviews 页（再从那页点 Write a review 写评价） */
+  onWriteReview: (
+    staff: { id: number; name: string; nric: string },
+    target?: "reviews" | "write-review",
+  ) => void
 }) {
   const [query, setQuery] = useState("")
   const [staff, setStaff] = useState<Row[]>(rows)
@@ -85,7 +88,7 @@ export default function HistoryDetailPage({
   const [notice, setNotice] = useState("")
   const [remarkFor, setRemarkFor] = useState<number | null>(null)
   const [remarkDraft, setRemarkDraft] = useState("")
-  /** 点 Name / ID Number 打开的人物卡 */
+  /** 点 Name / NRIC 打开的人物卡 */
   const [profileFor, setProfileFor] = useState<number | null>(null)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [editing, setEditing] = useState(false)
@@ -138,7 +141,7 @@ export default function HistoryDetailPage({
         <div className="attendance-title-group">
           <nav className="attendance-navigation" aria-label="Page navigation">
             <button className="attendance-back" onClick={onBack} aria-label="Back to History">
-              <HugeiconsIcon icon={ArrowLeft02Icon} size={26} strokeWidth={2} color="currentColor" />
+              <BackIcon />
             </button>
           </nav>
           <h1>History - Sign In / Sign Out ({dayLabel(sheet)})</h1>
@@ -202,8 +205,8 @@ export default function HistoryDetailPage({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search IC No."
-              aria-label="Search staff by name or IC number"
+              placeholder="Search NRIC"
+              aria-label="Search staff by name or NRIC"
             />
           </label>
         )}
@@ -230,11 +233,7 @@ export default function HistoryDetailPage({
                 </th>
                 <th scope="col">NO</th>
                 <th scope="col">Name</th>
-                <th scope="col">
-                  ID
-                  <br />
-                  Number
-                </th>
+                <th scope="col">NRIC</th>
                 <th scope="col">
                   Start
                   <br />
@@ -402,7 +401,7 @@ export default function HistoryDetailPage({
               ))}
             </tbody>
           </table>
-          {!visible.length && <p className="e-att-empty">No staff match that IC No.</p>}
+          {!visible.length && <p className="e-att-empty">No staff match that NRIC.</p>}
         </div>
       </section>
 
@@ -582,6 +581,7 @@ export default function HistoryDetailPage({
       {bulkSheet === "out" && (
         <TimeSheet
           title="Time Out"
+          withDate
           initial="23:00"
           onCancel={() => setBulkSheet(null)}
           onConfirm={(value) => {
@@ -599,9 +599,9 @@ export default function HistoryDetailPage({
           <StaffProfileDialog
             person={{ id: person.id, name: person.name, nric: person.nric }}
             onClose={() => setProfileFor(null)}
-            onWriteReview={() => {
+            onWriteReview={(target) => {
               setProfileFor(null)
-              onWriteReview({ id: person.id, name: person.name, nric: person.nric })
+              onWriteReview({ id: person.id, name: person.name, nric: person.nric }, target)
             }}
           />
         )

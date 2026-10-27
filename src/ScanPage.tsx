@@ -1,17 +1,25 @@
+import { useEffect } from "react"
+import BackIcon from "./BackIcon"
 import "./employer.css"
 
 /* 扫码页：信息结构参考稿是「返回 + 居中标题 + 方形取景框」，
    这里保留同样的结构，取景框与提示文案改用现有玻璃质感，并加一道上下往复的扫描线 */
 export default function ScanPage({ onBack }: { onBack: () => void }) {
+  /* 掃描 3 秒後視為已讀到兌換碼，自動跳到兌換頁 */
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      window.location.hash = "redeem"
+    }, 3000)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   return (
     <main className="employer-page scan-page">
       <div className="employer-landscape" aria-hidden="true" />
 
       <header className="notice-header">
         <button type="button" className="notice-back" aria-label="Back" onClick={onBack}>
-          <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m27 9-13 14 13 14" />
-          </svg>
+          <BackIcon />
         </button>
         <h1>Scan</h1>
         <span />

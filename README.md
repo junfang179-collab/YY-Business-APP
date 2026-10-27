@@ -27,12 +27,12 @@ pnpm dev        # http://localhost:8443
 | 客户反馈 | `/?viewport=ipad#customer-feedback` |
 | 修改密码 / 账单方式 | `/?viewport=ipad#change-password`、`#billing-method` |
 
-在任意地址追加 `&region=my` 即切换到马来西亚版本，例如 `/?viewport=ipad&region=my#attendance`。
+在任意地址追加 `&region=my` 或 `&region=hk` 即切换到马来西亚 / 香港版本，例如 `/?viewport=ipad&region=my#attendance`、`/?viewport=ipad&region=hk#attendance`。
 
 ## 目录结构
 
 - `src/` — 新加坡版页面与共享组件、样式
-- `src/my/` — 马来西亚版页面（与 SG 一一对应，样式与工具复用上一级）
+- `src/my/`、`src/hk/` — 马来西亚 / 香港版页面（与 SG 一一对应，样式与工具复用上一级）
 - `src/pages-sg.ts` / `src/my/index.ts` — 两套页面汇总，`App.tsx` 按 `region` 参数选用
 - `public/assets/` — 背景图、图标等静态资源
 - `tools/` — 图片烘焙等辅助脚本

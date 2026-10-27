@@ -1,13 +1,13 @@
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  ArrowLeft02Icon,
   CheckmarkCircle02Icon,
   PlusSignIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { AddStaffForm, AttendanceDialog } from "./AddStaffForm"
 import { StaffProfileDialog } from "./StaffProfileDialog"
+import BackIcon from "../BackIcon"
 import "../e-attendance.css"
 
 export type AttendanceSheet = { iso: string; date: string }
@@ -44,7 +44,10 @@ export default function EAttendanceDetailPage({
 }: {
   sheet: AttendanceSheet | null
   onBack: () => void
-  onWriteReview: (staff: { id: number; name: string; nric: string }) => void
+  onWriteReview: (
+    staff: { id: number; name: string; nric: string },
+    target?: "reviews" | "write-review",
+  ) => void
 }) {
   const [query, setQuery] = useState("")
   const [notice, setNotice] = useState("")
@@ -68,7 +71,7 @@ export default function EAttendanceDetailPage({
         <div className="attendance-title-group">
           <nav className="attendance-navigation" aria-label="Page navigation">
             <button className="attendance-back" onClick={onBack} aria-label="Back to E-Attendance List">
-              <HugeiconsIcon icon={ArrowLeft02Icon} size={26} strokeWidth={2} color="currentColor" />
+              <BackIcon />
             </button>
           </nav>
           <h1>E-Attendance List ({sheetLabel(sheet)})</h1>
@@ -79,8 +82,8 @@ export default function EAttendanceDetailPage({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search IC No."
-            aria-label="Search staff by name or ID number"
+            placeholder="Search NRIC"
+            aria-label="Search staff by name or NRIC"
           />
         </label>
       </header>
@@ -97,7 +100,7 @@ export default function EAttendanceDetailPage({
               <tr>
                 <th scope="col">NO</th>
                 <th scope="col">Name</th>
-                <th scope="col">ID Number</th>
+                <th scope="col">NRIC</th>
                 <th scope="col">
                   Start
                   <br />
@@ -142,7 +145,7 @@ export default function EAttendanceDetailPage({
               ))}
             </tbody>
           </table>
-          {!visible.length && <p className="e-att-empty">No staff match that IC No.</p>}
+          {!visible.length && <p className="e-att-empty">No staff match that NRIC.</p>}
         </div>
       </section>
 
@@ -186,9 +189,9 @@ export default function EAttendanceDetailPage({
               nric: person.nric,
             }}
             onClose={() => setProfileFor(null)}
-            onWriteReview={() => {
+            onWriteReview={(target) => {
               setProfileFor(null)
-              onWriteReview({ id: person.id, name: person.name, nric: person.nric })
+              onWriteReview({ id: person.id, name: person.name, nric: person.nric }, target)
             }}
           />
         )

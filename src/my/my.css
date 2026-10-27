@@ -11,18 +11,99 @@
 /* ── 城市背景 ──────────────────────────────────────────────
    新加坡用的是烘焙过的新加坡海湾图（登录页 singapore-bay / 工作台 bay-cover-employer
    / 评价 pages bay-cover-reviews / 考勤页 bay-scrim + 两层天际线）。
-   马来西亚统一换成吉隆坡城市插画，四套壳子一次覆盖，避免漏页面。
-   注意保持「单层 background」，Figma 抓取只认第一层。 */
-html.region-my .landscape,
-html.region-my .employer-landscape,
-html.region-my .reviews-landscape,
-html.region-my .write-review-landscape,
-html.region-my .attendance-landscape {
+   马来西亚换成吉隆坡城市插画，同样拆成四档：登录页原图，其余页面用
+   **已经烘焙好白色遮罩**的版本（tools/bake-region-backgrounds.py 生成）。
+   保持「单层 background」，Figma 抓取只认第一层。 */
+html.region-my .landscape {
   background: url("/assets/kl-city.webp") center / cover no-repeat;
+}
+html.region-my .employer-landscape {
+  background: url("/assets/my-cover-employer.webp") center / cover no-repeat;
+}
+html.region-my .reviews-landscape,
+html.region-my .write-review-landscape {
+  background: url("/assets/my-cover-reviews.webp") center / cover no-repeat;
+}
+html.region-my .attendance-landscape {
+  background: url("/assets/my-scrim.webp") center / cover no-repeat;
 }
 
 /* 考勤页的那两层天际线是新加坡图的切片，马来西亚用整张城市图，直接不渲染 */
 html.region-my .attendance-skyline,
 html.region-my .attendance-skyline-right {
   display: none;
+}
+
+/* ── 部门切换（仅马来西亚） ────────────────────────────────
+   头部「LOGO + 企业名」右侧多一枚下拉三角，点开是 Select Department 弹窗。
+   三角与弹窗里的下拉都用内联 SVG，保持「可复制到 Figma」的画法。 */
+html.region-my .dept-brand-row {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--e));
+  min-width: 0;
+}
+
+html.region-my .dept-brand-row .dept-brand {
+  min-width: 0;
+}
+
+html.region-my .dept-brand-toggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: calc(44 * var(--e));
+  height: calc(44 * var(--e));
+  padding: 0;
+  border: 1px solid #ffffffc7;
+  border-radius: 50%;
+  background: #ffffffd9;
+  box-shadow: 0 7px 20px #6283aa20;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+html.region-my .dept-brand-toggle:hover { background: #fff; }
+html.region-my .dept-brand-toggle:focus-visible { outline: 2px solid #8ecbff; outline-offset: 2px; }
+
+html.region-my .dept-brand-toggle svg {
+  width: calc(15 * var(--e));
+  height: calc(9 * var(--e));
+}
+
+html.region-my .dept-picker-text {
+  margin: 0 0 calc(24 * var(--e));
+  color: #43608a;
+  font-size: 21px;
+  line-height: 1.6;
+  text-align: center;
+  text-wrap: balance;
+}
+
+html.region-my .dept-picker { margin-bottom: calc(26 * var(--e)); }
+
+/* 弹窗内容很短，下拉菜单在文档流里展开（不是浮层），弹窗跟着变高，
+   这样菜单不会盖住下面的 Cancel / Confirm，也不会被弹窗的 overflow 裁掉 */
+html.region-my .dept-picker .app-select-menu {
+  position: static;
+  margin-top: calc(10 * var(--e));
+}
+
+/* 高度给 trigger 而不是外层 .app-select：外层定高会把菜单挡在容器外，弹窗也就撑不高 */
+html.region-my .dept-picker .app-select-trigger { height: calc(64 * var(--e)); border-radius: calc(16 * var(--e)); font-size: var(--fs-body); }
+html.region-my .dept-picker .app-select-menu { font-size: var(--fs-body); }
+
+html.region-my .dept-picker-actions { margin-top: 0; }
+
+/* 没选部门时 Confirm 不可用：用实色而不是 opacity，避免复制到 Figma 时颜色丢失 */
+html.region-my .dept-picker-actions .attendance-blue-button[disabled] {
+  background: #b9d8f5;
+  color: #ffffff;
+  cursor: default;
+}
+
+@media (max-width: 700px) {
+  html.region-my .dept-brand-row { gap: 6px; }
+  html.region-my .dept-brand-toggle { width: 36px; height: 36px; }
+  html.region-my .dept-brand-toggle svg { width: 12px; height: 7px; }
 }

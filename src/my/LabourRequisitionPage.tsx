@@ -5,7 +5,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowLeft01Icon,
   AlertCircleIcon,
-  ArrowLeft02Icon,
   ArrowRight01Icon,
   Building02Icon,
   Cancel01Icon,
@@ -21,6 +20,7 @@ import { AttendanceDialog, TimeSheet } from "./AttendancePage"
 
 import { SelectMenu } from "./SelectMenu"
 
+import BackIcon from "../BackIcon"
 import "../attendance.css"
 
 import "../labour.css"
@@ -305,12 +305,7 @@ export default function LabourRequisitionPage({
                   : "Back to workspace"
               }
             >
-              <HugeiconsIcon
-                icon={ArrowLeft02Icon}
-                size={26}
-                strokeWidth={2}
-                color="currentColor"
-              />
+              <BackIcon />
             </button>
           </nav>
           <h1>

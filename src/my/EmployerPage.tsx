@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { SelectMenu } from "./SelectMenu"
+import BackIcon from "../BackIcon"
 import "../employer.css"
 
 type ModuleId = "requisition" | "attendance" | "list" | "history"
@@ -68,7 +69,6 @@ export default function EmployerPage({
   onAttendanceList,
   onHistory,
   onRequisition,
-  onClothing,
 }: {
   onBack: () => void
   /** Sign In / Sign Out：先选计费方式（Per Hour / Per Room） */
@@ -78,7 +78,7 @@ export default function EmployerPage({
   onHistory: () => void
   /** 选完部门进建单页 */
   onRequisition: (department: string) => void
-  /** 右上角服装图标 → Staff Clothing 列表 */
+  /** 马来暂不提供 Staff Clothing 入口；保留该参数只是为了和 SG 版保持同一套 props */
   onClothing: () => void
 }) {
   const [notice, setNotice] = useState("")
@@ -125,20 +125,11 @@ export default function EmployerPage({
           onClick={onBack}
           aria-label="Back to Department"
         >
-          <EmployerIcon name="back" />
+          <BackIcon />
         </button>
         <div>
           <p>Hong Ye Group</p>
           <h1>E-Attendance</h1>
-        </div>
-        <div className="employer-size-control">
-          <button
-            className="employer-size-button"
-            aria-label="Open Staff Clothing"
-            onClick={onClothing}
-          >
-            <EmployerIcon name="shirt" />
-          </button>
         </div>
       </header>
       <section

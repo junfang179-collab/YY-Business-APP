@@ -5,11 +5,11 @@ import { staffPhoto } from "../staffPhoto"
 
 /**
  * The card that sits between a shift row and the review flow: tapping a
- * person's Name or ID Number opens their information first, so the manager can
+ * person's Name or NRIC opens their information first, so the manager can
  * check identity before writing anything. "Reviews" continues into the
  * one-person review page.
  *
- * Information architecture: avatar → name → ID Number + Date of birth →
+ * Information architecture: avatar → name → NRIC + Date of birth →
  * Reviews.
  */
 export type ProfileSubject = {
@@ -32,7 +32,11 @@ export function StaffProfileDialog({
 }: {
   person: ProfileSubject
   onClose: () => void
-  onWriteReview: () => void
+  /**
+   * "reviews" → 先看這位員工的 Staff Reviews 頁（單人評價不再從這裏直接進寫評價頁）；
+   * "write-review" → 迳直進寫評價頁（其它入口的舊行為）。
+   */
+  onWriteReview: (target?: "reviews" | "write-review") => void
 }) {
   const name = person.name.replace(/\s*\n\s*/g, " ")
   const nric = person.nric.replace(/\s/g, "")
@@ -45,7 +49,7 @@ export function StaffProfileDialog({
         <h3>{name}</h3>
         <div className="attendance-profile-fields">
           <div>
-            <span>ID Number</span>
+            <span>NRIC</span>
             <strong>{maskId(nric)}</strong>
           </div>
           <div>
@@ -53,7 +57,10 @@ export function StaffProfileDialog({
             <strong>{profile?.birth ?? "—"}</strong>
           </div>
         </div>
-        <button className="attendance-blue-button attendance-profile-review" onClick={onWriteReview}>
+        <button
+          className="attendance-blue-button attendance-profile-review"
+          onClick={() => onWriteReview("reviews")}
+        >
           <HugeiconsIcon icon={StarCircleIcon} size={20} strokeWidth={1.9} color="currentColor" />
           Reviews
         </button>

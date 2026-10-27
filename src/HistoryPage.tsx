@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowDown01Icon,
-  ArrowLeft02Icon,
   Calendar03Icon,
   CheckmarkCircle02Icon,
   Download04Icon,
@@ -10,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { DateRangeDialog, dateRangeLabel } from "./DateRangePicker"
 import type { HistorySheet } from "./HistoryDetailPage"
+import BackIcon from "./BackIcon"
 import "./e-attendance.css"
 
 /**
@@ -132,7 +132,7 @@ export default function HistoryPage({
         <div className="attendance-title-group">
           <nav className="attendance-navigation" aria-label="Page navigation">
             <button className="attendance-back" onClick={onBack} aria-label="Back to workspace">
-              <HugeiconsIcon icon={ArrowLeft02Icon} size={26} strokeWidth={2} color="currentColor" />
+              <BackIcon />
             </button>
           </nav>
           <h1>History</h1>

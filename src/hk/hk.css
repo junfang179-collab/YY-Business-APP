@@ -1,0 +1,1398 @@
+/*
+ * 香港（HK）专属样式。
+ *
+ * 和马来西亚一样：两套页面共用 `src/*.css` 里的全部 class，这个文件只负责
+ * 「香港和其它地区不一样」的那部分。约定：所有选择器都以 `html.region-hk` 开头
+ * （App.tsx 在切换地区时会给 <html> 加这个 class），这样各地区互不干扰。
+ */
+
+/* ── 城市背景 ──────────────────────────────────────────────
+   香港用维多利亚港城市插画（1920×1440，4:3，与 1366×1024 视口同比）。
+   登录 / 注册 / 忘记密码铺原图；其余页面铺**已经烘焙好白色遮罩**的版本
+   （tools/bake-region-backgrounds.py 生成，色标与新加坡 bay-cover-* / bay-scrim 一致），
+   内容才压得住插画。仍然是单层 background，Figma 抓取只认第一层也能完整还原。 */
+html.region-hk .landscape {
+  background: url("/assets/hk-city.webp") center / cover no-repeat;
+}
+html.region-hk .employer-landscape {
+  background: url("/assets/hk-cover-employer.webp") center / cover no-repeat;
+}
+html.region-hk .reviews-landscape,
+html.region-hk .write-review-landscape {
+  background: url("/assets/hk-cover-reviews.webp") center / cover no-repeat;
+}
+html.region-hk .attendance-landscape {
+  background: url("/assets/hk-scrim.webp") center / cover no-repeat;
+}
+
+/* 考勤页的两层天际线是新加坡图的切片，香港用整张城市图，直接不渲染 */
+html.region-hk .attendance-skyline,
+html.region-hk .attendance-skyline-right {
+  display: none;
+}
+
+/* 香港的工作台只剩 3 个模块（没有 Labour Requisition），网格跟着改成 3 列，
+   否则第四列会空着、卡片全挤在左边。
+   注意：只能命中工作台（.employer-content），不能写成 `html.region-hk .employer-grid`
+   —— 那样特异性会压过 `.dept-content .employer-grid`（部门主页单卡居中）
+   和 `.billing-content .employer-grid`（付款方式两卡居中），把它们也变成 3 列左对齐。 */
+@media (min-width: 1001px) {
+  html.region-hk .employer-content:not(.billing-content) > .employer-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── 考勤表（香港的列）─────────────────────────────────────
+   列序参照客户旧系统：序號 / 姓名 / 單價 / 開始 / 簽到 / 結束 / 簽退 /
+   合計 / 操作 / 職位 / 日誌。身份證號碼不单列也不做副标，
+   合計只显示总时数（休息时数不再提供入口），備註改由「日誌」图标进入。 */
+
+/* 單價：$65 深色 + /小時 浅色 */
+html.region-hk .attendance-price { white-space: nowrap; }
+html.region-hk .attendance-price-unit { color: #96a8bd; font-size: var(--fs-secondary); }
+
+/* 合計：单一数值，垂直居中，比姓名字号稍重一点方便扫列 */
+html.region-hk .attendance-total-value {
+  display: block;
+  color: #27344a;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 職位跟其他列一样居中：中文职名只有 4–5 个字，靠左反而在窄屏贴边；
+   太长的职名（「測試發布工作 shijian」）收成省略号，不能压到日誌那一列 */
+html.region-hk .attendance-job-text {
+  overflow: hidden;
+  color: #4a5c75;
+  font-size: var(--fs-secondary);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 記錄明細頁的「簽退」改用門衛打卡「簽出」那顆橙色（簽到仍是藍色）
+   底色寫 !important：attendance.css 裡 .attendance-page .attendance-blue-button
+   的藍色底會壓過來（同分靠後者），且全域 border/box-shadow 重置也帶 !important。 */
+html.region-hk .h-det-page .attendance-in-button.is-out {
+  background: #f5a623 !important;
+}
+html.region-hk .h-det-page .attendance-in-button.is-out:hover:not(:disabled) {
+  background: #e0930f !important;
+  filter: none;
+}
+html.region-hk .h-det-page .attendance-in-button.is-out:active:not(:disabled) {
+  background: #d2870b !important;
+  filter: none;
+}
+
+/* 日誌图标按钮：有记录时填实色，没有时留浅底 */
+html.region-hk .attendance-log-button {
+  display: inline-grid;
+  place-items: center;
+  width: calc(46 * var(--a));
+  height: calc(46 * var(--a));
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: calc(11 * var(--a));
+  background: transparent;
+  transition: background .16s ease;
+}
+html.region-hk .attendance-log-button svg { width: calc(23 * var(--a)); height: calc(23 * var(--a)); }
+html.region-hk .attendance-log-button:hover { background: #eaf4ff; }
+html.region-hk .attendance-log-button.is-set { background: #eff7ff; }
+html.region-hk .attendance-log-button:focus-visible { outline: 2px solid #8ecbff; outline-offset: 2px; }
+
+/* ── 簽到二維碼整頁（考勤頁右上「二維碼」进入）──────────────
+   内容只有三块：时间范围、码、一句提示，所以整块垂直居中。
+   时间值未选时用品牌蓝（可点），选完转深墨色（已是结果）。 */
+/* 内容太少，撑不起整块玻璃面板：面板本身透明，让白二维码卡直接落在背景上，
+   和参考图一样把注意力全给二维码 */
+html.region-hk .qr-panel {
+  align-items: center;
+  justify-content: center;
+  gap: calc(34 * var(--a));
+  padding: calc(16 * var(--a)) calc(32 * var(--a)) calc(28 * var(--a));
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+html.region-hk .qr-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: calc(24 * var(--a)) calc(78 * var(--a));
+}
+
+html.region-hk .qr-field {
+  display: flex;
+  align-items: center;
+  gap: calc(4 * var(--a));
+}
+
+html.region-hk .qr-label {
+  color: #37516f;
+  font-size: max(calc(26 * var(--a)), 18px);
+  white-space: nowrap;
+}
+
+html.region-hk .qr-value {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(9 * var(--a));
+  min-height: 44px;
+  padding: 0 2px;
+  background: transparent;
+  color: #14233b;
+  font-size: max(calc(26 * var(--a)), 18px);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .16s ease;
+}
+html.region-hk .qr-value.is-empty { color: #078aff; }
+html.region-hk .qr-value:hover { color: #007be6; }
+html.region-hk .qr-value:focus-visible { outline: 2px solid #8ecbff; outline-offset: 4px; border-radius: 6px; }
+html.region-hk .qr-value > svg {
+  width: calc(23 * var(--a));
+  height: calc(23 * var(--a));
+  min-width: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+}
+
+/* 白卡 + 一圈浅蓝光晕，替代参考图里那个外发光方框 */
+html.region-hk .qr-card {
+  display: grid;
+  place-items: center;
+  width: min(calc(452 * var(--a)), 430px);
+  aspect-ratio: 1;
+  padding: calc(34 * var(--a));
+  border-radius: calc(30 * var(--a));
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 1px #d5e8f9,
+    0 calc(14 * var(--a)) calc(38 * var(--a)) #33658f2e,
+    0 0 0 calc(12 * var(--a)) #ffffff52,
+    0 0 0 calc(26 * var(--a)) #ffffff1f;
+}
+
+html.region-hk .qr-art {
+  width: 100%;
+  height: 100%;
+  color: #16233a;
+}
+
+html.region-hk .qr-hint {
+  margin: 0;
+  color: #2c4763;
+  font-size: max(calc(25 * var(--a)), 17px);
+  font-weight: 500;
+  text-align: center;
+}
+
+@media (max-width: 1000px) {
+  html.region-hk .qr-panel { gap: 24px; padding: 16px 18px 44px; }
+  html.region-hk .qr-range { gap: 14px 34px; }
+  html.region-hk .qr-card { padding: 20px; border-radius: 22px; }
+}
+
+/* ── 編輯態工具列（香港）────────────────────────────
+   四顆 chip 順序：部門 / 開始時間 / 結束時間 / 編輯工作（批量簽到簽退已移到頂欄）。
+   前三顆改字段、最後一顆進整頁批量改職位 / 單價。 */
+html.region-hk .attendance-editbar { justify-content: space-between; }
+
+html.region-hk .edit-job-entry {
+  flex: 0 1 auto;
+  gap: calc(10 * var(--a));
+  min-width: calc(258 * var(--a));
+}
+
+html.region-hk .edit-job-arrow {
+  width: calc(18 * var(--a));
+  height: calc(18 * var(--a));
+  min-width: 14px;
+  min-height: 14px;
+  flex: 0 0 auto;
+}
+
+/* 編輯列浮在天空背景上，`.is-blue` 的淺藍幾乎看不出邊界，所以全局壓深一檔
+   （記錄明細頁與 9月24日 考勤頁共用；兩頁的編輯列都不在白色面板裡） */
+html.region-hk .attendance-page .attendance-chip.is-blue {
+  background: #b6dcff;
+}
+html.region-hk .attendance-page .attendance-chip.is-blue:hover:not(:disabled) {
+  background: #a2d2ff;
+}
+
+/* ── 編輯工作整頁（考勤頁編輯態「編輯工作」進入）────────────
+   版式对齐「客戶意見」：返回栏 + 一张白卡（cf-panel），卡里 label + 白底输入框，
+   右下角方形蓝按钮。原来那套 attendance 玻璃面板整套去掉。
+   四个字段排 2×2：部門 / 工作 是下拉，開始 / 結束 是时分滚轮。 */
+html.region-hk .edit-job-page {
+  /* TimeSheet 弹窗用这个变量取正文色，换掉 attendance 外壳后需要补上 */
+  --attendance-ink: #14233b;
+}
+
+html.region-hk .edit-job-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+html.region-hk .edit-job-panel {
+  flex: 0 0 auto;
+}
+
+html.region-hk .edit-job-panel .cf-form {
+  gap: calc(36 * var(--e));
+}
+
+html.region-hk .edit-job-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(30 * var(--e)) calc(32 * var(--e));
+}
+
+html.region-hk .edit-job-control {
+  height: calc(88 * var(--e));
+  min-height: 56px;
+}
+html.region-hk .edit-job-control .app-select-trigger {
+  padding: 0 calc(27 * var(--e));
+  border: 1px solid #dcebfa;
+  border-radius: calc(20 * var(--e));
+  color: #142b50;
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+html.region-hk .edit-job-control .app-select-trigger:hover {
+  border-color: #bcdcf7;
+}
+html.region-hk .edit-job-control .app-select-trigger.is-open {
+  border-color: #078aff;
+}
+html.region-hk .edit-job-control .app-select-trigger.is-empty {
+  color: #9fb3c9;
+  font-weight: 400;
+}
+html.region-hk .edit-job-control .app-select-menu {
+  padding: 8px;
+  border-color: #dcebfa;
+  border-radius: calc(18 * var(--e));
+}
+html.region-hk .edit-job-control .app-select-menu button {
+  min-height: 52px;
+  padding: 0 calc(18 * var(--e));
+  font-size: var(--fs-body);
+}
+
+/* 时间字段做成和输入框同款：白底 + 1px 描边 + 20e 圆角，右侧时钟图标 */
+html.region-hk .edit-job-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: calc(88 * var(--e));
+  min-height: 56px;
+  padding: 0 calc(27 * var(--e));
+  border: 1px solid #dcebfa;
+  border-radius: calc(20 * var(--e));
+  background: #fff;
+  color: #142b50;
+  text-align: left;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  transition: border-color .15s ease;
+}
+html.region-hk .edit-job-time:hover { border-color: #bcdcf7; }
+html.region-hk .edit-job-time:focus-visible {
+  outline: none;
+  border-color: #078aff;
+}
+html.region-hk .edit-job-time .is-empty { color: #9fb3c9; font-weight: 400; }
+html.region-hk .edit-job-time svg { flex: 0 0 auto; color: #7fa0bf; }
+
+/* 单价：外框和输入框同款，内部「$ … / 小時」，用 focus-within 代替 input 的 outline */
+html.region-hk .edit-job-money {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: calc(88 * var(--e));
+  min-height: 56px;
+  padding: 0 calc(27 * var(--e));
+  border: 1px solid #dcebfa;
+  border-radius: calc(20 * var(--e));
+  background: #fff;
+  transition: border-color .15s ease;
+}
+html.region-hk .edit-job-money:hover { border-color: #bcdcf7; }
+html.region-hk .edit-job-money:focus-within { border-color: #078aff; }
+html.region-hk .edit-job-money-symbol {
+  flex: 0 0 auto;
+  color: #7f9bb8;
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+html.region-hk .edit-job-money-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #142b50;
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  caret-color: #078aff;
+  font-variant-numeric: tabular-nums;
+}
+html.region-hk .edit-job-money-input:focus { outline: none; }
+html.region-hk .edit-job-money-input::placeholder { color: #9fb3c9; }
+html.region-hk .edit-job-money-unit {
+  flex: 0 0 auto;
+  color: #7f9bb8;
+  font-size: var(--fs-secondary);
+}
+
+html.region-hk .edit-job-panel .cf-submit {
+  min-width: calc(310 * var(--e));
+}
+
+@media (max-width: 1000px) {
+  html.region-hk .edit-job-panel { padding: 26px 22px; }
+  html.region-hk .edit-job-grid { grid-template-columns: 1fr; gap: 16px; }
+  html.region-hk .edit-job-control,
+  html.region-hk .edit-job-time,
+  html.region-hk .edit-job-money { height: 58px; }
+  html.region-hk .edit-job-entry { min-width: 0; }
+  html.region-hk .edit-job-panel .cf-submit { min-width: 220px; }
+}
+
+/* 批量簽到 / 簽退：簽名視窗（沿用 attendance.css 的 signature 結構，香港版板面更高） */
+html.region-hk .attendance-signature-sheet.is-batch {
+  width: min(800px, calc(100vw - 32px));
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-pad {
+  aspect-ratio: 68 / 34;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-surface {
+  margin-bottom: 14px;
+}
+html.region-hk .attendance-signature-caption {
+  margin: 0 26px 22px;
+  color: #7a8ca5;
+  font-size: max(calc(15 * var(--a)), 14px);
+  line-height: 1.5;
+  text-align: center;
+}
+html.region-hk .attendance-signature-sheet.is-batch {
+  box-shadow: 0 40px 130px #16365a4f;
+}
+html.region-hk .attendance-signature-sheet.is-batch .attendance-signature-head {
+  padding: 22px 26px;
+}
+html.region-hk .attendance-signature-sheet.is-batch .attendance-sheet-close {
+  width: 58px;
+  height: 58px;
+  background: #fff;
+  color: #33506f;
+  box-shadow: 0 6px 18px #35618f24, inset 0 0 0 1px #dbe9f8;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-sheet-close:hover {
+  background: #f2f8ff;
+  color: #14233b;
+}
+html.region-hk .attendance-signature-sheet.is-batch .attendance-sheet-confirm {
+  width: 58px;
+  height: 58px;
+  box-shadow: 0 8px 20px #078aff3d;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-sheet-confirm:disabled {
+  background: #c9ddf1;
+  box-shadow: none;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-sheet-confirm:disabled
+  svg
+  path {
+  stroke: #8fabc9;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-clear {
+  min-width: calc(152 * var(--a));
+  min-height: 54px;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: #fff;
+  color: #2f7fc9;
+  font-size: max(calc(19 * var(--a)), 16px);
+  font-weight: 600;
+  box-shadow: 0 6px 16px #35618f1f, inset 0 0 0 1px #cfe3f7;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-clear:not(:disabled):hover {
+  background: #eaf4ff;
+  color: #0070d4;
+  box-shadow: 0 8px 20px #35618f2b, inset 0 0 0 1px #a9cdf0;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-clear:disabled {
+  opacity: .55;
+}
+/* button 的 border / box-shadow 会被 attendance.css 的 !important 重置清掉，
+   所以「清除」只靠实色背景区分：白板上用浅蓝实底，禁用时降低不透明度。 */
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-clear {
+  min-width: calc(152 * var(--a));
+  background: #e8f2fd;
+  color: #2f7fc9;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-clear:not(:disabled):hover {
+  background: #d8e9fb;
+  color: #0070d4;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-signature-clear:disabled {
+  background: #eef5fd;
+  color: #a3bcd6;
+  opacity: 1;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-sheet-confirm:disabled {
+  background: #bcd7ee;
+}
+html.region-hk
+  .attendance-signature-sheet.is-batch
+  .attendance-sheet-confirm:disabled
+  svg
+  path {
+  stroke: #f5faff;
+}
+
+/* ── 操作列：狀態膠囊三態三色 + 取消/恢復 ───────────────────
+   button 的 border / box-shadow 会被 attendance.css 的 !important 清掉，
+   三态只能靠实色底区分；取消按钮同理，用浅色实底代替描边。 */
+html.region-hk .attendance-status {
+  width: auto;
+  min-width: calc(112 * var(--a));
+  padding: 0 calc(14 * var(--a));
+}
+html.region-hk .attendance-status.is-applied {
+  background: #078aff;
+  color: #fff;
+}
+html.region-hk .attendance-status.is-applied:hover:not(:disabled) {
+  background: #007be6;
+}
+html.region-hk .attendance-status.is-no-show {
+  background: #e2574c;
+  color: #fff;
+}
+html.region-hk .attendance-status.is-no-show:hover:not(:disabled) {
+  background: #cf4a40;
+}
+html.region-hk .attendance-status.is-cancelled {
+  background: #e7edf5;
+  color: #7d8fa6;
+}
+html.region-hk .attendance-status.is-cancelled:hover:not(:disabled) {
+  background: #dbe5f0;
+}
+/* 電子考勤明細（11月2日）只有兩態：申請中 / 拒絕 */
+html.region-hk .attendance-status.is-rejected {
+  background: #e2574c;
+  color: #fff;
+}
+html.region-hk .attendance-status.is-rejected:hover:not(:disabled) {
+  background: #cf4a40;
+}
+/* 膠囊文字單獨包 span 並壓成 line-height:1，跟右側三角一起垂直居中；
+   不壓的話行高來自表格，字會偏下兩三像素。 */
+html.region-hk .attendance-status-label {
+  display: block;
+  line-height: 1;
+}
+/* 明細頁兩態寬度拉平，不然「已申請」比「拒絕」寬，同一列左右邊忽寬忽窄 */
+html.region-hk .e-att-detail-table .attendance-status {
+  width: calc(136 * var(--a));
+  min-width: calc(136 * var(--a));
+}
+
+html.region-hk .attendance-action-wrap {
+  gap: calc(8 * var(--a));
+}
+
+/* 1024 档列宽更紧：状态胶囊收一档内边距，保证不挤压三角 */
+@media (max-width: 1100px) {
+  html.region-hk .attendance-status {
+    min-width: 96px;
+    padding: 0 8px;
+    gap: 4px;
+  }
+  /* 明細頁窄檔給一點餘量，字和三角不貼邊，兩種狀態仍等寬 */
+  html.region-hk .e-att-detail-table .attendance-status {
+    width: 104px;
+    min-width: 104px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+}
+
+/* ── 日誌整页（考勤页点日誌图标进入）────────────────────────
+   版式对齐「客戶意見 / 編輯工作」：返回栏 + 白卡。卡里是一张三列表，
+   只有横向细分割线（参考旧系统那样不画竖线），表头吸顶。 */
+html.region-hk .log-panel {
+  flex-direction: column;
+  gap: calc(6 * var(--e));
+  padding: calc(26 * var(--e)) calc(24 * var(--e)) calc(22 * var(--e));
+}
+
+html.region-hk .log-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--e));
+  padding: 0 calc(26 * var(--e)) calc(16 * var(--e));
+  color: #7a8ca5;
+  font-size: var(--fs-secondary);
+}
+html.region-hk .log-meta strong {
+  color: #142b50;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+html.region-hk .log-meta-sep {
+  width: 1px;
+  height: calc(16 * var(--e));
+  background: #d3e3f2;
+}
+
+html.region-hk .log-scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+html.region-hk .log-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+html.region-hk .log-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: calc(21 * var(--e)) calc(26 * var(--e));
+  border-bottom: 1px solid #dcebfa;
+  background: #f8fbff;
+  color: #7a8ca5;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: calc(.2 * var(--e));
+  text-align: center;
+}
+html.region-hk .log-table th:last-child { text-align: left; }
+html.region-hk .log-table td {
+  padding: calc(23 * var(--e)) calc(26 * var(--e));
+  border-bottom: 1px solid #e9f2fb;
+  color: #27344a;
+  font-size: var(--fs-body);
+  text-align: center;
+  vertical-align: middle;
+}
+html.region-hk .log-table tr:last-child td { border-bottom: 0; }
+html.region-hk .log-table tbody tr:hover td { background: #f1f8ff; }
+html.region-hk .log-type { font-weight: 500; }
+html.region-hk .log-time {
+  color: #5c7794;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* 要压过 `html.region-hk .log-table td` 的居中，所以带上 td 前缀 */
+html.region-hk .log-table td.log-content { text-align: left; }
+
+html.region-hk .log-empty {
+  margin: 0;
+  padding: calc(80 * var(--e)) 0;
+  color: #8fa6bf;
+  font-size: var(--fs-body);
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  html.region-hk .log-panel { padding: 18px 16px; }
+  html.region-hk .log-table th,
+  html.region-hk .log-table td { padding: 14px 12px; }
+  html.region-hk .log-meta { padding: 0 12px 12px; }
+}
+
+/* ── 添加新員工整页（考勤页右下角「加人」进入）──────────────
+   版式对齐「日誌 / 編輯工作」：返回栏 + 一张白卡。
+   卡内先一排筛选（部門 / 時間段 / 搜尋），下面是候选人列表。 */
+html.region-hk .add-staff-panel {
+  flex-direction: column;
+  gap: calc(10 * var(--e));
+  padding: calc(26 * var(--e)) calc(28 * var(--e)) calc(18 * var(--e));
+}
+
+html.region-hk .add-staff-toolbar {
+  display: flex;
+  align-items: center;
+  gap: calc(16 * var(--e));
+  padding-bottom: calc(16 * var(--e));
+  border-bottom: 1px solid #e4eef9;
+}
+
+html.region-hk .add-staff-filter {
+  flex: 0 0 auto;
+  width: calc(300 * var(--e));
+}
+html.region-hk .add-staff-filter .app-select-trigger {
+  height: calc(72 * var(--e));
+  min-height: 48px;
+  padding: 0 calc(24 * var(--e));
+  border: 1px solid #dcebfa;
+  border-radius: calc(18 * var(--e));
+  background: #fff;
+  color: #142b50;
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+html.region-hk .add-staff-filter .app-select-trigger:hover {
+  border-color: #bcdcf7;
+}
+html.region-hk .add-staff-filter .app-select-trigger.is-open {
+  border-color: #078aff;
+}
+html.region-hk .add-staff-filter .app-select-menu {
+  padding: 8px;
+  border-color: #dcebfa;
+  border-radius: calc(18 * var(--e));
+}
+html.region-hk .add-staff-filter .app-select-menu button {
+  min-height: 52px;
+  padding: 0 calc(18 * var(--e));
+  font-size: var(--fs-body);
+}
+
+html.region-hk .add-staff-search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: calc(12 * var(--e));
+  height: calc(72 * var(--e));
+  min-height: 48px;
+  padding: 0 calc(24 * var(--e));
+  border: 1px solid #dcebfa;
+  border-radius: calc(18 * var(--e));
+  background: #fff;
+  transition: border-color .15s ease;
+}
+html.region-hk .add-staff-search:hover { border-color: #bcdcf7; }
+html.region-hk .add-staff-search:focus-within { border-color: #078aff; }
+html.region-hk .add-staff-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #142b50;
+  font-family: inherit;
+  font-size: var(--fs-body);
+}
+html.region-hk .add-staff-search input:focus { outline: none; }
+html.region-hk .add-staff-search input::placeholder { color: #9fb3c9; }
+html.region-hk .add-staff-search svg {
+  flex: 0 0 auto;
+  width: calc(30 * var(--e));
+  height: calc(30 * var(--e));
+}
+
+html.region-hk .add-staff-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+html.region-hk .add-staff-row {
+  display: flex;
+  align-items: center;
+  gap: calc(24 * var(--e));
+  padding: calc(22 * var(--e)) calc(10 * var(--e));
+  border-bottom: 1px solid #e9f2fb;
+}
+html.region-hk .add-staff-row:last-child { border-bottom: 0; }
+
+html.region-hk .add-staff-info { flex: 1; min-width: 0; }
+html.region-hk .add-staff-name {
+  margin: 0 0 calc(10 * var(--e));
+  color: #142b50;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+html.region-hk .add-staff-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(8 * var(--e)) calc(34 * var(--e));
+  margin: 0;
+  color: #7a8ca5;
+  font-size: var(--fs-secondary);
+}
+html.region-hk .add-staff-meta b {
+  color: #46688c;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+html.region-hk .add-staff-add {
+  flex: 0 0 auto;
+  min-width: calc(168 * var(--e));
+  height: calc(64 * var(--e));
+  min-height: 44px;
+  padding: 0 calc(24 * var(--e));
+  border: 0;
+  border-radius: calc(16 * var(--e));
+  background: #078aff;
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+html.region-hk .add-staff-add:hover:not(:disabled) { background: #007be6; }
+html.region-hk .add-staff-add:disabled {
+  background: #e7f0fa;
+  color: #93aec8;
+  cursor: default;
+}
+
+html.region-hk .add-staff-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(14 * var(--e));
+  text-align: center;
+}
+html.region-hk .add-staff-empty svg {
+  width: calc(160 * var(--e));
+  height: calc(160 * var(--e));
+  margin-bottom: calc(6 * var(--e));
+}
+html.region-hk .add-staff-empty h2 {
+  margin: 0;
+  color: #5c7794;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+html.region-hk .add-staff-empty p {
+  margin: 0;
+  color: #8fa6bf;
+  font-size: var(--fs-secondary);
+}
+
+@media (max-width: 1100px) {
+  html.region-hk .add-staff-panel { padding: 16px 16px 12px; }
+  html.region-hk .add-staff-toolbar { gap: 10px; }
+  html.region-hk .add-staff-filter { width: 190px; }
+  html.region-hk .add-staff-row { gap: 12px; padding: 14px 4px; }
+  html.region-hk .add-staff-meta { gap: 4px 16px; }
+  html.region-hk .add-staff-add { min-width: 108px; }
+}
+
+/* ── 批量評價：列表 + 逐人評分彈窗 ─────────────────────
+   列表回到「一人一行」的紧凑版式（頭像 / 姓名 / 狀態 / 按鈕），點任一行開彈窗；
+   彈窗內容是參考舊系統定下的口徑：三個維度（態度 / 完成度 / 是否準時）+ 備註。
+   尺寸沿用 write-review 的 --w（1376 基准）。 */
+html.region-hk .review-list {
+  display: grid;
+  gap: calc(14 * var(--w));
+}
+
+html.region-hk button.review-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: calc(22 * var(--w));
+  width: 100%;
+  padding: calc(16 * var(--w)) calc(24 * var(--w));
+  border: 0;
+  border-radius: calc(20 * var(--w));
+  background: #fbfdffef;
+  box-shadow: 0 8px 24px #6d8fae12;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s ease, box-shadow .15s ease;
+}
+html.region-hk button.review-row:hover {
+  background: #ffffff;
+  box-shadow: 0 10px 28px #6d8fae22;
+}
+html.region-hk .review-row > img {
+  width: calc(76 * var(--w));
+  min-width: 48px;
+  height: calc(76 * var(--w));
+  min-height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+html.region-hk .review-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: calc(7 * var(--w));
+  min-width: 0;
+}
+html.region-hk .review-row-main strong {
+  color: #142b50;
+  font-size: max(calc(22 * var(--w)), 18px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+html.region-hk .review-row-main > span {
+  color: #7a8ca5;
+  font-size: max(calc(16 * var(--w)), 14px);
+  font-variant-numeric: tabular-nums;
+}
+
+html.region-hk .review-row-state {
+  min-width: calc(160 * var(--w));
+  color: #8698b0;
+  font-size: max(calc(18 * var(--w)), 16px);
+  text-align: right;
+  white-space: nowrap;
+}
+html.region-hk .review-row-state.is-done {
+  color: #27344a;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+html.region-hk .review-row-stars {
+  margin-right: calc(6 * var(--w));
+  color: #f5a623;
+}
+
+html.region-hk .review-row-action {
+  display: grid;
+  place-items: center;
+  min-width: calc(136 * var(--w));
+  height: calc(58 * var(--w));
+  min-height: 44px;
+  padding: 0 calc(22 * var(--w));
+  border-radius: calc(14 * var(--w));
+  background: #1689eb;
+  color: #fff;
+  font-size: max(calc(18 * var(--w)), 16px);
+  font-weight: 600;
+}
+html.region-hk .review-row-action.is-edit {
+  background: #e6f2ff;
+  color: #1689eb;
+}
+
+/* 彈窗：遮罩用真實元素（::backdrop 在 Figma 抓取時會整個消失） */
+html.region-hk .review-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+html.region-hk .review-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #1939594d;
+  backdrop-filter: blur(5px);
+  cursor: default;
+}
+html.region-hk .review-sheet {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: calc(26 * var(--w)) calc(30 * var(--w)) calc(30 * var(--w));
+  border: 1px solid #ffffffde;
+  border-radius: calc(26 * var(--w));
+  background: linear-gradient(165deg, #f7fbff, #e2effd);
+  box-shadow: 0 40px 120px #16365a54;
+}
+
+html.region-hk .review-sheet-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(16 * var(--w));
+  margin-bottom: calc(20 * var(--w));
+}
+html.region-hk .review-sheet-head strong {
+  color: #142b50;
+  font-size: max(calc(25 * var(--w)), 19px);
+  font-weight: 600;
+  text-align: center;
+}
+/* 關閉按鈕：與全項目彈窗（.attendance-dialog-close）完全一致的淺藍圓 + 深藍叉 */
+html.region-hk .review-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 50%;
+  background: #e0edfc;
+  color: #142b50;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+html.region-hk .review-sheet-close:hover { background: #d7e7fa; }
+html.region-hk .review-sheet-close svg {
+  width: 24px;
+  height: 24px;
+}
+html.region-hk .review-sheet-save {
+  min-width: calc(148 * var(--w));
+  min-height: 48px;
+  padding: 0 calc(26 * var(--w));
+  border-radius: 999px;
+  background: #078aff;
+  color: #fff;
+  font-family: inherit;
+  font-size: max(calc(19 * var(--w)), 16px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+html.region-hk .review-sheet-save:hover { background: #007be6; }
+
+html.region-hk .review-sheet-body {
+  padding: calc(22 * var(--w)) calc(24 * var(--w)) calc(24 * var(--w));
+  border-radius: calc(20 * var(--w));
+  background: #fdfeff;
+}
+
+html.region-hk .review-sheet-title {
+  margin: 0 0 calc(14 * var(--w));
+  color: #1689eb;
+  font-size: max(calc(18 * var(--w)), 16px);
+  font-weight: 700;
+}
+
+html.region-hk .review-sheet-rates {
+  display: grid;
+  gap: calc(8 * var(--w));
+}
+html.region-hk .review-sheet-rate {
+  display: flex;
+  align-items: center;
+  gap: calc(24 * var(--w));
+}
+html.region-hk .review-sheet-rate > span {
+  min-width: calc(124 * var(--w));
+  color: #526780;
+  font-size: max(calc(19 * var(--w)), 17px);
+}
+html.region-hk .review-sheet-rate [role="radiogroup"] {
+  display: flex;
+  gap: calc(4 * var(--w));
+}
+html.region-hk .review-sheet-rate [role="radiogroup"] button {
+  width: calc(46 * var(--w));
+  min-width: 36px;
+  height: calc(46 * var(--w));
+  min-height: 36px;
+  padding: 0;
+  background: transparent;
+  color: #c5d4e2;
+  font-size: max(calc(28 * var(--w)), 22px);
+  line-height: 1;
+  cursor: pointer;
+}
+html.region-hk .review-sheet-rate [role="radiogroup"] button.is-on {
+  color: #f5a623;
+}
+
+html.region-hk .review-sheet-remark {
+  display: block;
+  margin-top: calc(20 * var(--w));
+}
+html.region-hk .review-sheet-remark > span {
+  display: block;
+  margin-bottom: calc(10 * var(--w));
+  color: #1689eb;
+  font-size: max(calc(18 * var(--w)), 16px);
+  font-weight: 700;
+}
+html.region-hk .review-sheet-remark textarea {
+  width: 100%;
+  min-height: calc(130 * var(--w));
+  padding: calc(16 * var(--w)) calc(18 * var(--w));
+  border: 0;
+  border-radius: calc(16 * var(--w));
+  background: #f2f8fe;
+  box-shadow: inset 0 0 0 1px #e2eefa;
+  color: #17365b;
+  font-family: inherit;
+  font-size: max(calc(18 * var(--w)), 16px);
+  line-height: 1.5;
+  resize: vertical;
+}
+html.region-hk .review-sheet-remark textarea:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1px #8ecbff;
+  background: #fff;
+}
+html.region-hk .review-sheet-remark textarea::placeholder { color: #9fb3c9; }
+
+@media (max-width: 1100px) {
+  html.region-hk button.review-row {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: 14px;
+    padding: 13px 16px;
+  }
+  html.region-hk .review-row-state {
+    min-width: 116px;
+    font-size: 14px;
+  }
+  html.region-hk .review-row-action { min-width: 92px; height: 46px; }
+  html.region-hk .review-sheet { padding: 18px 18px 20px; }
+  html.region-hk .review-sheet-body { padding: 16px 14px 16px; }
+  html.region-hk .review-sheet-save { min-width: 104px; }
+}
+
+/* 電子考勤列表右側「下載 / 發送」：文字按鈕，最後一列加寬以容下 5 個字 */
+html.region-hk .e-att-head,
+html.region-hk .e-att-row {
+  grid-template-columns: 1.05fr .8fr .62fr 1fr calc(190 * var(--a));
+}
+html.region-hk .attendance-page .e-att-send {
+  width: 100%;
+  height: max(calc(58 * var(--a)), 44px);
+  padding: 0 calc(10 * var(--a));
+  font-family: inherit;
+  font-size: max(calc(22 * var(--a)), 15px);
+  font-weight: 600;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  html.region-hk .e-att-head,
+  html.region-hk .e-att-row {
+    grid-template-columns: 1fr .8fr .6fr .95fr calc(150 * var(--a));
+  }
+  html.region-hk .attendance-page .e-att-send {
+    padding: 0 6px;
+    font-size: 15px;
+  }
+}
+
+/* 記錄頁最後一列同樣是「下載 / 發送」文字按鈕，最後一列也加寬 */
+html.region-hk .e-hist-head,
+html.region-hk .e-hist-row {
+  grid-template-columns: 1.25fr .78fr .6fr .98fr .98fr calc(190 * var(--a));
+}
+
+@media (max-width: 1100px) {
+  html.region-hk .e-hist-head,
+  html.region-hk .e-hist-row {
+    grid-template-columns: 1.15fr .72fr .56fr .9fr .9fr calc(150 * var(--a));
+  }
+}
+
+/* 下載彈窗：部門勾選卡 + 單一「下載」按鈕 */
+html.region-hk .attendance-dialog.e-dl-dialog {
+  width: min(660px, calc(100vw - 40px));
+}
+html.region-hk .e-dl-dialog .attendance-dialog-content {
+  padding: 32px;
+}
+html.region-hk .e-dl-dialog h2 {
+  margin: 0 44px 10px 0;
+  font-size: 28px;
+}
+html.region-hk .e-dl-hint {
+  margin: 0 0 22px !important;
+  color: #6c7c94;
+  font-size: 16px;
+  line-height: 1.5;
+}
+html.region-hk .e-dl-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+html.region-hk .e-dl-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 78px;
+  padding: 14px 16px;
+  border: 1px solid #dde9f7;
+  border-radius: 17px;
+  background: #f1f7fd;
+  color: #24374f;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color .16s, background .16s, box-shadow .16s;
+}
+html.region-hk .e-dl-option:hover {
+  border-color: #b6d6f2;
+  background: #eef7ff;
+}
+html.region-hk .e-dl-option.is-on {
+  border-color: #6fb8f4;
+  background: #dceeff;
+  box-shadow: 0 3px 12px #2f7fd01a;
+}
+/* 記錄頁多一項「發送財務」：第一項佔滿一行，下面兩份考勤表照舊並排 */
+html.region-hk .e-dl-option.is-wide { grid-column: 1 / -1; }
+html.region-hk .e-dl-file {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: #e7f1fd;
+  color: #2f7fd0;
+}
+html.region-hk .e-dl-option.is-on .e-dl-file {
+  background: #ffffff;
+  color: #1f74c9;
+}
+html.region-hk .e-dl-name {
+  overflow: hidden;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html.region-hk .e-dl-check {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #b7d3ee;
+  border-radius: 9px;
+  background: #fff;
+}
+html.region-hk .e-dl-option.is-on .e-dl-check {
+  border-color: #078aff;
+  background: #078aff;
+}
+html.region-hk .e-dl-check svg {
+  width: 17px;
+  height: 17px;
+}
+html.region-hk .e-dl-actions {
+  margin-top: 26px;
+}
+html.region-hk .attendance-page .e-dl-submit {
+  width: 100%;
+  min-height: 60px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+html.region-hk .attendance-page .e-dl-submit:disabled {
+  background: #d3e2f3;
+  color: #9db2c9;
+}
+
+@media (max-width: 1100px) {
+  html.region-hk .attendance-dialog.e-dl-dialog {
+    width: min(560px, calc(100vw - 32px));
+  }
+  html.region-hk .e-dl-dialog .attendance-dialog-content {
+    padding: 24px;
+  }
+  html.region-hk .e-dl-dialog h2 {
+    font-size: 23px;
+  }
+  html.region-hk .e-dl-hint {
+    margin-bottom: 18px !important;
+    font-size: 15px;
+  }
+  html.region-hk .e-dl-options {
+    gap: 10px;
+  }
+  html.region-hk .e-dl-option {
+    min-height: 66px;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 15px;
+  }
+  html.region-hk .e-dl-file {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+  html.region-hk .e-dl-file svg {
+    width: 22px;
+    height: 22px;
+  }
+  html.region-hk .e-dl-name {
+    font-size: 16px;
+  }
+  html.region-hk .e-dl-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+  }
+  html.region-hk .e-dl-check svg {
+    width: 14px;
+    height: 14px;
+  }
+  html.region-hk .e-dl-actions {
+    margin-top: 20px;
+  }
+  html.region-hk .attendance-page .e-dl-submit {
+    min-height: 52px;
+    font-size: 17px;
+  }
+}
+
+/* ---- 門衛簽到 / 簽退（#gate-checkin）--------------------------------
+   資訊架構照客戶舊系統：標題右側 QR Code、表格六列「姓名 / 開始時間 /
+   簽到 / 結束時間 / 簽出 / 職位」。未打卡是藍 / 琥珀兩顆按鈕，打完換成
+   簽名縮圖 + 時間；簽名板沿用考勤頁那一套。 */
+/* 這頁沒有右下角的加人按鈕，去掉表格為它預留的底部空白 */
+html.region-hk .gate-table-scroll {
+  padding-bottom: calc(14 * var(--a));
+}
+
+html.region-hk .gate-job {
+  color: #4d6a8b;
+  font-size: var(--fs-secondary);
+  line-height: 1.3;
+}
+
+/* 尺寸与「簽到 / 簽退（9月24日）」表格里的簽到按钮完全对齐：
+   114a × 86a、圆角 16a、字 31a / 700；实色底，不要内阴影 / 投影 */
+html.region-hk .gate-action {
+  width: calc(114 * var(--a));
+  height: calc(86 * var(--a));
+  max-width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: calc(16 * var(--a));
+  color: #fff;
+  font-size: max(calc(31 * var(--a)), 20px);
+  font-weight: 700;
+  white-space: nowrap;
+  background-image: none;
+  box-shadow: none;
+  filter: none;
+  transition: background .16s ease;
+}
+
+html.region-hk .gate-action.is-in {
+  background: #078aff;
+}
+
+html.region-hk .gate-action.is-in:hover {
+  background: #007be6;
+}
+
+html.region-hk .gate-action.is-out {
+  background: #f5a623;
+}
+
+html.region-hk .gate-action.is-out:hover {
+  background: #e0930f;
+}
+
+html.region-hk .gate-action.is-in:active {
+  background: #006bd0;
+}
+
+html.region-hk .gate-action.is-out:active {
+  background: #d2870b;
+}
+
+html.region-hk .gate-action:focus-visible {
+  outline: 2px solid #8ecbff;
+  outline-offset: 3px;
+}
+
+html.region-hk .gate-end-row td {
+  height: calc(72 * var(--a));
+  color: #96a8bd;
+  font-size: var(--fs-secondary);
+}
+
+html.region-hk .gate-end-row:hover td {
+  background: transparent;
+}
+
+/* QR Code 彈窗：白底碼 + 一句用法 */
+html.region-hk .gate-qr {
+  display: grid;
+  justify-items: center;
+  gap: calc(20 * var(--a));
+}
+
+html.region-hk .gate-qr-card {
+  display: grid;
+  place-items: center;
+  width: min(calc(320 * var(--a)), 100%);
+  aspect-ratio: 1;
+  padding: calc(22 * var(--a));
+  border-radius: calc(24 * var(--a));
+  background: #fff;
+  box-shadow: 0 calc(10 * var(--a)) calc(30 * var(--a)) #35618f1f;
+}
+
+html.region-hk .gate-qr-card .qr-art {
+  width: 100%;
+  height: 100%;
+}
+
+html.region-hk .gate-qr-hint {
+  margin: 0;
+  color: #5a7492;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  html.region-hk .gate-table {
+    min-width: 860px;
+  }
+  html.region-hk .gate-action {
+    font-size: 19px;
+  }
+}

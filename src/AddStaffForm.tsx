@@ -51,7 +51,7 @@ type StaffProfile = { name: string; gender: string; birth: string }
 
 /**
  * Hiring records already on file. In the live app this is a lookup against the
- * staff database; here the ID number resolves to a fixed profile, and unknown
+ * staff database; here the NRIC resolves to a fixed profile, and unknown
  * IDs fall back to a stable entry so the form always shows a filled card.
  */
 const DIRECTORY = [
@@ -109,7 +109,7 @@ export function AddStaffForm({
   return (
     <form className="attendance-add-form" onSubmit={submit}>
       <label>
-        ID Number
+        NRIC
         <input
           name="nric"
           placeholder="e.g. S245836589"
@@ -123,13 +123,13 @@ export function AddStaffForm({
       <label>
         Full name
         <span className={`attendance-readonly${profile ? "" : " is-empty"}`}>
-          {profile ? profile.name : "Auto-filled from ID Number"}
+          {profile ? profile.name : "Auto-filled from NRIC"}
         </span>
       </label>
       <label>
         Gender
         <span className={`attendance-readonly${profile ? "" : " is-empty"}`}>
-          {profile ? profile.gender : "Auto-filled from ID Number"}
+          {profile ? profile.gender : "Auto-filled from NRIC"}
         </span>
       </label>
       <IpadPicker label="Department" value={department} placeholder="Select department" options={["Banquet", "F&B Service", "Kitchen", "Housekeeping"]} onChange={setDepartment} />

@@ -16,6 +16,7 @@ import { AddStaffForm } from "./AddStaffForm"
 import AttendanceCheck from "./AttendanceCheck"
 import { StaffProfileDialog } from "./StaffProfileDialog"
 import PageStateSwitcher, { type PageState } from "../PageStateSwitcher"
+import BackIcon from "../BackIcon"
 import "../attendance.css"
 
 type AttendanceIconName = "back" | "team-checkin" | "calendar-checkout" | "work-hours" | "search" | "edit" | "confirm" | "plus" | "close"
@@ -36,11 +37,11 @@ const isHugeIconName = (name: AttendanceIconName): name is HugeIconName =>
 /**
  * UI labels for the editable staff fields. `nric` stays as the data key
  * (it is the identifier the mock records already use) but reads
- * "ID Number" wherever the user sees it.
+ * "NRIC" wherever the user sees it.
  */
 const staffFieldLabels = {
   name: "Name",
-  nric: "ID Number",
+  nric: "NRIC",
   start: "Start time",
   end: "End time",
   remark: "Remark",
@@ -79,7 +80,7 @@ type Staff = {
   signature?: string
   outSignature?: string
 }
-type Modal = "qr" | "add" | {
+type Modal = "add" | {
   id: number
   direction: "in" | "out"
 } | null
@@ -369,10 +370,13 @@ export function AttendanceDialog({
   title,
   children,
   onClose,
+  className,
 }: {
   title: string
   children: ReactNode
   onClose: () => void
+  /** 额外的弹窗类名（例如需要让内部下拉溢出弹窗时不裁切） */
+  className?: string
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   useEffect(() => {
@@ -390,7 +394,7 @@ export function AttendanceDialog({
     <dialog
       ref={ref}
       tabIndex={-1}
-      className="attendance-dialog"
+      className={`attendance-dialog${className ? ` ${className}` : ""}`}
       aria-labelledby="attendance-dialog-title"
       onCancel={onClose}
       onClick={(event) => {
@@ -430,14 +434,28 @@ const DATE_OPTIONS = Array.from({ length: 2 }, (_, index) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
 })
 
+const EN_MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+]
+
+/** 结束时间可以跨到明天，滚轮里写「Today 27 Oct」比裸 ISO 好认 */
+function dateLabel(value: string) {
+  const [, month, day] = value.split("-").map(Number)
+  return `${value === DATE_OPTIONS[0] ? "Today" : "Tomorrow"} ${day} ${EN_MONTHS[month - 1]}`
+}
+
 function WheelColumn({
   items,
   value,
   onChange,
+  formatLabel,
 }: {
   items: string[]
   value: string
   onChange: (value: string) => void
+  /** 只影响显示，值仍是原始字符串（日期列要显示成「Today 27 Oct」） */
+  formatLabel?: (item: string) => string
 }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -472,7 +490,7 @@ function WheelColumn({
             })
           }}
         >
-          {item}
+          {formatLabel ? formatLabel(item) : item}
         </button>
       ))}
       <div className="attendance-wheel-pad" />
@@ -805,7 +823,12 @@ export function TimeSheet({
     >
       <div className="attendance-wheel">
         {withDate && (
-          <WheelColumn items={DATE_OPTIONS} value={date} onChange={setDate} />
+          <WheelColumn
+            items={DATE_OPTIONS}
+            value={date}
+            onChange={setDate}
+            formatLabel={dateLabel}
+          />
         )}
         <WheelColumn
           items={HOUR_OPTIONS}
@@ -1070,7 +1093,8 @@ export default function AttendancePage({
   billing = "hour",
 }: {
   onBack: () => void
-  onWriteReview: (staff: StaffRef) => void
+  /** target = "reviews" 时代表从人物卡进来看评价，先落在 Staff Reviews 页 */
+  onWriteReview: (staff: StaffRef, target?: "reviews" | "write-review") => void
   onBatchReview: (staff: StaffRef[]) => void
   /** Success 弹窗里的 Check History → 跳 History 列表 */
   onCheckHistory: () => void
@@ -1239,7 +1263,7 @@ export default function AttendancePage({
     person: Staff,
     field: "name" | "nric" | "start" | "end" | "remark",
   ) {
-    /* Name and ID Number are the single-staff entry point: tapping either one
+    /* Name and NRIC are the single-staff entry point: tapping either one
        opens the person's information card first, and the card's button carries
        on into the one-person review page (bulk reviews start from Confirm). */
     if (field === "name" || field === "nric") {
@@ -1273,7 +1297,7 @@ export default function AttendancePage({
               onClick={onBack}
               aria-label="Back to Login"
             >
-              <AttendanceIcon name="back" />
+              <BackIcon />
             </button>
           </nav>
           <h1>Sign In / Sign Out(Sep 24)</h1>
@@ -1283,13 +1307,6 @@ export default function AttendancePage({
           role="toolbar"
           aria-label="Attendance actions"
         >
-          <button
-            className="attendance-soft-button"
-            onClick={() => setModal("qr")}
-          >
-            <QrMark />
-            <span>QR Code</span>
-          </button>
           <button
             className={`attendance-soft-button${editing ? " is-editing" : ""}`}
             aria-pressed={editing}
@@ -1400,8 +1417,8 @@ export default function AttendancePage({
               value={query}
               disabled={listUnavailable}
               onChange={(event) => setQuery(event.target.value)}
-              aria-label="Search ID number or staff name"
-              placeholder="Search ID Number"
+              aria-label="Search NRIC or staff name"
+              placeholder="Search NRIC"
             />
           </label>
         </div>
@@ -1471,7 +1488,7 @@ export default function AttendancePage({
                 </th>
                 <th scope="col">NO</th>
                 <th scope="col">Name</th>
-                <th scope="col">ID Number</th>
+                <th scope="col">NRIC</th>
                 <th scope="col">
                   Start
                   <br />
@@ -1681,7 +1698,7 @@ export default function AttendancePage({
               tone="muted"
               compact
               title="No matching staff"
-              description={`Nothing matches “${query}”. Try a different name or ID number.`}
+              description={`Nothing matches “${query}”. Try a different name or NRIC.`}
               primaryLabel="Clear Search"
               onPrimary={() => changePageState("default")}
             />
@@ -1750,13 +1767,12 @@ export default function AttendancePage({
           }}
         />
       )}
-      {(modal === "add" || modal === "qr") && (
+      {modal === "add" && (
         <AttendanceDialog
-          title={modal === "add" ? "Personal information" : "QR Code"}
+          title="Personal information"
           onClose={() => setModal(null)}
         >
-          {modal === "add" ? (
-            <AddStaffForm
+          <AddStaffForm
               onAdd={(values) => {
                 setStaff((current) => [
                   ...current,
@@ -1783,23 +1799,7 @@ export default function AttendancePage({
                   "Staff added to the list.",
                 )
               }}
-            />
-          ) : (
-            <div className="attendance-qr-preview">
-              <QrMark />
-              <h3>Sign In / Sign Out</h3>
-              <p>Sep 24 · Hong Ye Group</p>
-              <p className="attendance-preview-note">
-                Staff scan this code to sign in or out.
-              </p>
-              <button
-                className="attendance-blue-button"
-                onClick={() => setModal(null)}
-              >
-                Done
-              </button>
-            </div>
-          )}
+          />
         </AttendanceDialog>
       )}
       {submitPrompt && (
@@ -1871,13 +1871,16 @@ export default function AttendancePage({
             nric: profileStaff.nric,
           }}
           onClose={() => setProfileFor(null)}
-          onWriteReview={() => {
+          onWriteReview={(target) => {
             setProfileFor(null)
-            onWriteReview({
-              id: profileStaff.id,
-              name: profileStaff.name.replace("\n", " "),
-              nric: profileStaff.nric.replace(/\s/g, ""),
-            })
+            onWriteReview(
+              {
+                id: profileStaff.id,
+                name: profileStaff.name.replace("\n", " "),
+                nric: profileStaff.nric.replace(/\s/g, ""),
+              },
+              target,
+            )
           }}
         />
       )}

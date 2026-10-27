@@ -1,3 +1,4 @@
+import BackIcon from "../BackIcon"
 import "../employer.css"
 import "../billing-method.css"
 
@@ -44,9 +45,7 @@ export default function BillingMethodPage({
           onClick={onBack}
           aria-label="Back to workspace"
         >
-          <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m27 9-13 14 13 14" />
-          </svg>
+          <BackIcon />
         </button>
         <div>
           <p>Hong Ye Group</p>

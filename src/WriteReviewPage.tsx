@@ -1,14 +1,9 @@
 import { useState, type FormEvent } from "react"
 import { staffPhoto } from "./staffPhoto"
+import BackIcon from "./BackIcon"
 import "./write-review.css"
 
 const labels = ["Attitude", "Performance", "Experience", "Grooming"]
-
-const Back = () => (
-  <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="m26 8-12 12 12 12" />
-  </svg>
-)
 
 /** Same masking rule as the attendance profile card: first letter + last four. */
 export function maskedId(nric?: string) {
@@ -21,11 +16,11 @@ export default function WriteReviewPage({
   staff,
   onBack,
   onSubmit,
-  onSkip,
 }: {
   staff: { id: number; name: string; nric?: string }
   onBack: () => void
   onSubmit: () => void
+  /** 单人评价没有「Skip」按钮，这个参数只为和另外两个地区的导出结构对齐 */
   onSkip: () => void
 }) {
   const [ratings, setRatings] = useState([5, 4, 5, 4])
@@ -42,16 +37,13 @@ export default function WriteReviewPage({
       <div className="write-review-landscape" aria-hidden="true" />
       <header className="write-review-header">
         <button aria-label="Back to staff reviews" onClick={onBack}>
-          <Back />
+          <BackIcon />
         </button>
         <div>
           <p>Staff feedback</p>
           <h1>Write a Review</h1>
         </div>
         <div className="write-review-actions">
-          <button type="button" className="is-skip" onClick={onSkip}>
-            Skip
-          </button>
           <button type="submit" form="write-review-form" className="is-submit">
             Submit
           </button>
@@ -76,7 +68,7 @@ export default function WriteReviewPage({
             </div>
           </div>
           <div className="write-review-id">
-            <span>ID Number</span>
+            <span>NRIC</span>
             <strong>{maskedId(staff.nric)}</strong>
           </div>
           <div className="write-review-project">

@@ -179,6 +179,32 @@
   color: #1476d4;
 }
 
+/* 顶栏「下載 / 發送」：文字按钮，图标 + 文字沿用工具栏的软按钮外观 */
+.e-att-export {
+  color: #2d4b6d;
+}
+
+/* 明細頁標題右側：編輯工作 + 搜尋（按鈕沿用 toolbar 那顆 soft button 的尺寸） */
+.e-att-head-tools {
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.e-att-editjob {
+  color: #2d4b6d;
+}
+
+/* 年 / 月 / 日 三列滚轮的列标题，与下面 .attendance-wheel 的 10px 列间距对齐 */
+.e-att-wheel-labels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #7d90a6;
+  font-size: 15px;
+  text-align: center;
+}
+
 .e-date-dialog {
   width: min(520px, calc(100vw - 40px));
 }
@@ -288,6 +314,12 @@
   background: #f4faff9c;
 }
 
+/* 第一行的状态下拉改成向下展开：向上会被表格容器的 overflow:hidden 裁掉 */
+.e-att-detail-table .attendance-status-menu.is-below {
+  top: calc(100% + 4px);
+  bottom: auto;
+}
+
 .e-att-empty {
   margin: 0;
   padding: 48px 20px;
@@ -369,6 +401,7 @@
   font-weight: 500;
 }
 
+/* 新加坡 / 馬來西亞記錄頁的「匯出」按鈕（香港改用與電子考勤列表同一顆下載 / 發送軟按鈕） */
 .attendance-page .e-hist-export {
   display: inline-flex;
   align-items: center;
@@ -597,6 +630,8 @@
   gap: calc(14 * var(--a));
   /* 和下面表格面板的左缘对齐 */
   padding-left: calc(10 * var(--a));
+  /* 9月24日 那页是「左组 + 右组」所以 space-between；这页三颗是同一组，靠左排 */
+  justify-content: flex-start;
 }
 .h-det-bar.is-editing .attendance-chip {
   flex: 0 0 auto;
@@ -772,5 +807,13 @@
   .h-sign-mark {
     width: 190px;
     height: 78px;
+  }
+}
+
+/* 窄檔：標題右側多了「編輯工作」按鈕，搜索框要留夠寬度，
+   不然占位文字「搜尋姓名或身份證號碼」會被切掉最後一兩個字 */
+@media (max-width: 1100px) {
+  .e-att-head-tools .e-att-search {
+    width: calc(392 * var(--a));
   }
 }

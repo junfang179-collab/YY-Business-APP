@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import BackIcon from "./BackIcon"
 import "./employer.css"
 import "./change-password.css"
 
@@ -72,9 +73,7 @@ export default function ChangePasswordPage({ onBack }: { onBack: () => void }) {
 
       <header className="notice-header">
         <button type="button" className="notice-back" aria-label="Back" onClick={onBack}>
-          <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m27 9-13 14 13 14" />
-          </svg>
+          <BackIcon />
         </button>
         <h1>Change Password</h1>
         <span />

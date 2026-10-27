@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  ArrowLeft02Icon,
   Calendar03Icon,
   CheckmarkCircle02Icon,
   MailSend01Icon,
 } from "@hugeicons/core-free-icons"
 import { DateRangeDialog, dateRangeLabel } from "./DateRangePicker"
+import BackIcon from "../BackIcon"
 import "../e-attendance.css"
 
 type Mode = "Per Hour" | "Per Room"
@@ -83,7 +83,7 @@ export default function EAttendanceListPage({
               onClick={onBack}
               aria-label="Back to workspace"
             >
-              <HugeiconsIcon icon={ArrowLeft02Icon} size={26} strokeWidth={2} color="currentColor" />
+              <BackIcon />
             </button>
           </nav>
           <h1>E-Attendance List</h1>

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { staffPhoto } from "./staffPhoto"
+import BackIcon from "./BackIcon"
 import "./reviews.css"
 
 const entries = [
@@ -26,17 +27,6 @@ const entries = [
   },
 ]
 const labels = ["Attitude", "Performance", "Experience", "Grooming"]
-const Back = () => (
-  <svg
-    viewBox="0 0 40 40"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  >
-    <path d="m26 8-12 12 12 12" />
-  </svg>
-)
 const Search = () => (
   <svg
     viewBox="0 0 40 40"
@@ -65,10 +55,13 @@ export default function ReviewPage({
   staff,
   onBack,
   onWrite,
+  onWorkRecord,
 }: {
   staff: { id: number, name: string }
   onBack: () => void
   onWrite: () => void
+  /** 右上「Work Record」→ 這位員工的工地記錄頁 */
+  onWorkRecord: () => void
 }) {
   const [query, setQuery] = useState("")
   const shown = entries.filter((entry) =>
@@ -81,15 +74,20 @@ export default function ReviewPage({
       <div className="reviews-landscape" aria-hidden="true" />
       <header className="reviews-header">
         <button aria-label="Back to attendance" onClick={onBack}>
-          <Back />
+          <BackIcon />
         </button>
         <div>
           <p>Staff profile</p>
           <h1>Staff Reviews</h1>
         </div>
-        <button className="review-write" onClick={onWrite}>
-          Write a review
-        </button>
+        <div className="review-header-actions">
+          <button className="review-record" onClick={onWorkRecord}>
+            Work Record
+          </button>
+          <button className="review-write" onClick={onWrite}>
+            Write a review
+          </button>
+        </div>
       </header>
       <section className="reviews-content">
         <div className="review-summary">

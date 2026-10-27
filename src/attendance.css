@@ -76,19 +76,22 @@
 .attendance-page svg { display: block; flex-shrink: 0; }
 .attendance-navigation,
 .attendance-title-group { display: flex; align-items: center; }
+/* 全項目統一的返回按鈕：純白圓 + 藍色折角箭頭（2026-10-26）
+   白圓、無描邊、淡投影；箭頭顏色寫在 BackIcon 裡，這裡只管圓和尺寸。 */
 .attendance-back {
   display: grid;
   place-items: center;
   width: calc(66 * var(--a));
-  height: calc(64 * var(--a));
+  height: calc(66 * var(--a));
   min-width: 44px;
   min-height: 44px;
   padding: 0;
-  border: 1px solid var(--attendance-border);
+  border: 0;
   border-radius: 50%;
-  background: #ffffffdb;
-  box-shadow: 0 calc(7 * var(--a)) calc(20 * var(--a)) #6e91b218;
+  background: #fff;
+  box-shadow: 0 calc(4 * var(--a)) calc(14 * var(--a)) #33527a26;
 }
+.attendance-back:hover { background: #f5faff; }
 .attendance-back > svg { width: calc(30 * var(--a)); height: calc(30 * var(--a)); }
 .attendance-header { display: flex; align-items: center; justify-content: space-between; gap: calc(24 * var(--a)); min-height: calc(66 * var(--a)); margin: 0 0 calc(17 * var(--a)); }
 .attendance-title-group { min-width: 0; gap: calc(22 * var(--a)); }
@@ -345,7 +348,7 @@
 /* All attendance controls are intentionally flat except the floating add-staff action
    and the E-Attendance List row buttons (which carry a gradient highlight). */
 /* 圆形返回按钮例外：保留描边和淡投影，和登录页、雇主页的返回按钮同一套玻璃质感 */
-.attendance-page button:not(.attendance-add-button):not(.e-att-send):not(.attendance-back) { border: 0 !important; box-shadow: none !important; background-image: none !important; filter: none !important; }
+.attendance-page button:not(.attendance-add-button):not(.e-att-send):not(.attendance-back):not(.e-dl-option):not(.gate-action) { border: 0 !important; box-shadow: none !important; background-image: none !important; filter: none !important; }
 .attendance-page .attendance-blue-button:not(.attendance-add-button) { background: #078aff; }
 .attendance-page .attendance-blue-button:hover:not(.attendance-add-button):not(:disabled) { background: #007be6; filter: none; }
 /* Action 胶囊的状态色：与 History - Sign In / Sign Out (Oct 21) 一致，Applied 蓝、No Show 红 */
